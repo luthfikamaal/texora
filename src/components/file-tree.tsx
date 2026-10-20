@@ -141,43 +141,52 @@ export function FileTree({
         const isMain = !entry.isFolder && entry.path === mainFile
 
         return (
-          <TreeItem key={item.getId()} item={item} className="group/file">
-            <TreeItemLabel
-              data-active={isActive || undefined}
-              className={isActive ? "bg-accent text-accent-foreground" : undefined}
-            >
-              <span
-                role="presentation"
-                onClick={() => {
-                  if (!entry.isFolder && entry.path) onSelect(entry.path)
-                }}
-                className="flex min-w-0 flex-1 items-center gap-1"
+          <TreeItem
+            key={item.getId()}
+            item={item}
+            asChild
+            className="group/file"
+          >
+            <div>
+              <TreeItemLabel
+                data-active={isActive || undefined}
+                className={
+                  isActive ? "bg-accent text-accent-foreground" : undefined
+                }
               >
-                {iconFor(entry, item.isExpanded())}
-                <span className="truncate">{entry.name}</span>
-                {isMain && (
-                  <Badge variant="outline" className="ml-1 text-[10px]">
-                    main
-                  </Badge>
-                )}
-              </span>
-
-              {!entry.isFolder && entry.path && (
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label={`Unduh ${entry.path}`}
-                  title={`Unduh ${entry.path}`}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDownload(entry.path!)
+                <span
+                  role="presentation"
+                  onClick={() => {
+                    if (!entry.isFolder && entry.path) onSelect(entry.path)
                   }}
-                  className="opacity-0 group-hover/file:opacity-100 focus-visible:opacity-100"
+                  className="flex min-w-0 flex-1 items-center gap-1"
                 >
-                  <Download />
-                </Button>
-              )}
-            </TreeItemLabel>
+                  {iconFor(entry, item.isExpanded())}
+                  <span className="truncate">{entry.name}</span>
+                  {isMain && (
+                    <Badge variant="outline" className="ml-1 text-[10px]">
+                      main
+                    </Badge>
+                  )}
+                </span>
+
+                {!entry.isFolder && entry.path && (
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label={`Unduh ${entry.path}`}
+                    title={`Unduh ${entry.path}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDownload(entry.path!)
+                    }}
+                    className="opacity-0 group-hover/file:opacity-100 focus-visible:opacity-100"
+                  >
+                    <Download />
+                  </Button>
+                )}
+              </TreeItemLabel>
+            </div>
           </TreeItem>
         )
       })}

@@ -99,13 +99,14 @@ export function CompileErrorPanel({
                 <IssueRow issue={issue} onOpenLocation={onOpenLocation} />
               </li>
             ))}
-            {warnings.map((issue, i) => (
+            {warnings.map((warning, i) => (
               <li key={`w-${i}`}>
-                <IssueRow
-                  issue={issue}
-                  variant="warning"
-                  onOpenLocation={onOpenLocation}
-                />
+                <div className="flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left text-xs">
+                  <ChevronRight className="mt-0.5 size-3 shrink-0 text-amber-500" />
+                  <span className="min-w-0 flex-1 font-mono break-words">
+                    {warning}
+                  </span>
+                </div>
               </li>
             ))}
             {errors.length === 0 && warnings.length === 0 && (
@@ -122,11 +123,9 @@ export function CompileErrorPanel({
 
 function IssueRow({
   issue,
-  variant = "error",
   onOpenLocation,
 }: {
   issue: CompileIssue
-  variant?: "error" | "warning"
   onOpenLocation: (file: string, line: number) => void
 }) {
   const clickable = Boolean(issue.file)
@@ -138,13 +137,7 @@ function IssueRow({
       onClick={() => clickable && onOpenLocation(issue.file, issue.line)}
       className="hover:bg-accent flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left text-xs transition-colors disabled:cursor-default disabled:hover:bg-transparent"
     >
-      <ChevronRight
-        className={
-          variant === "warning"
-            ? "mt-0.5 size-3 shrink-0 text-amber-500"
-            : "text-destructive mt-0.5 size-3 shrink-0"
-        }
-      />
+      <ChevronRight className="text-destructive mt-0.5 size-3 shrink-0" />
       <span className="min-w-0 flex-1">
         <span className="font-medium break-words">{issue.message}</span>
         {clickable && (

@@ -27,3 +27,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# JCE context index runtime state
+.opencode-jce/context/

@@ -2,7 +2,10 @@ import { useCallback, useEffect, useState } from "react"
 import {
   ArrowLeft,
   Download,
+  FileCode2,
   FilePlus2,
+  FileText,
+  FileWarning,
   Play,
   Save,
   Settings2,
@@ -17,11 +20,27 @@ import { FileTree } from "@/components/file-tree"
 import { LatexEditor } from "@/components/latex-editor"
 import { PdfPreview } from "@/components/pdf-preview"
 import { ProjectSettingsDialog } from "@/components/project-settings-dialog"
+import { Frame, FramePanel } from "@/components/reui/frame"
 import { SaveFileDialog } from "@/components/save-file-dialog"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { Spinner } from "@/components/ui/spinner"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { ApiError } from "@/lib/api"
 import { projectApi } from "@/lib/project-api"
 import type {
@@ -35,12 +54,18 @@ import { clearSession } from "@/lib/session"
 import type { User } from "@/lib/auth-types"
 
 const ENGINES: CompileEngine[] = ["pdflatex", "xelatex", "lualatex"]
+const ENGINE_LABELS: Record<CompileEngine, string> = {
+  pdflatex: "pdfLaTeX",
+  xelatex: "XeLaTeX",
+  lualatex: "LuaLaTeX",
+}
 
 export function ProjectEditorPage({ user }: { user: User }) {
   const { projectId = "" } = useParams()
   const navigate = useNavigate()
 
   const [project, setProject] = useState<Project | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [files, setFiles] = useState<FileMeta[]>([])
   const [activePath, setActivePath] = useState<string | null>(null)
   const [content, setContent] = useState("")
@@ -52,7 +77,9 @@ export function ProjectEditorPage({ user }: { user: User }) {
   const [compiling, setCompiling] = useState(false)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
   const [pdfVersion, setPdfVersion] = useState(0)
-  const [compileFailure, setCompileFailure] = useState<CompileFailure | null>(null)
+  const [compileFailure, setCompileFailure] = useState<CompileFailure | null>(
+    null,
+  )
   const [showErrorPanel, setShowErrorPanel] = useState(false)
   const [pendingLine, setPendingLine] = useState<number | null>(null)
 
@@ -74,7 +101,7 @@ export function ProjectEditorPage({ user }: { user: User }) {
       }
       toast.error(fallback)
     },
-    [navigate]
+    [navigate],
   )
 
   // Muat detail project + daftar file
@@ -93,7 +120,13 @@ export function ProjectEditorPage({ user }: { user: User }) {
         setActivePath(first)
       })
       .catch((err) => {
-        if (!cancelled) handleError(err, "Gagal memuat project")
+        if (cancelled) return
+        handleError(err, "Gagal memuat project")
+        setLoadError(
+          err instanceof ApiError
+            ? err.message
+            : "Project tidak dapat dimuat. Coba lagi.",
+        )
       })
     return () => {
       cancelled = true
@@ -139,8 +172,8 @@ export function ProjectEditorPage({ user }: { user: User }) {
         prev.map((f) =>
           f.path === activePath
             ? { ...f, size_bytes: new Blob([content]).size }
-            : f
-        )
+            : f,
+        ),
       )
       toast.success("File disimpan")
     } catch (err) {
@@ -151,6 +184,7 @@ export function ProjectEditorPage({ user }: { user: User }) {
   }
 
   async function handleCompile() {
+    if (compiling) return
     setCompiling(true)
     setCompileFailure(null)
     try {
@@ -171,7 +205,7 @@ export function ProjectEditorPage({ user }: { user: User }) {
             failure.status === "timeout"
               ? "Kompilasi melebihi batas waktu"
               : "Kompilasi gagal",
-            { description: failure.message }
+            { description: failure.message },
           )
           // Langsung buka file yang error.
           if (failure.file) {
@@ -230,187 +264,280 @@ export function ProjectEditorPage({ user }: { user: User }) {
   })
 
   const fetchPdf = useCallback(
-    (id: string) => projectApi.fetchPdfObjectUrl(id),
-    []
+    (id: string, signal?: AbortSignal) =>
+      projectApi.fetchPdfObjectUrl(id, signal),
+    [],
   )
 
   if (!project) {
     return (
-      <div className="min-h-svh">
-        <AppHeader user={user} />
-        <div className="text-muted-foreground flex h-[60svh] items-center justify-center gap-2 text-sm">
-          <Spinner />
-          Memuat project…
-        </div>
+      <div className="bg-muted/30 flex h-svh flex-col overflow-hidden">
+        <AppHeader user={user} fluid />
+        <main className="flex min-h-0 flex-1 items-center justify-center p-4">
+          <Frame spacing="xs" className="w-full max-w-md shadow-sm">
+            <FramePanel fit className="bg-background p-0">
+              {loadError ? (
+                <Empty className="border-0 py-10">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <FileWarning />
+                    </EmptyMedia>
+                    <EmptyTitle>Project tidak dapat dibuka</EmptyTitle>
+                    <EmptyDescription>{loadError}</EmptyDescription>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    <Button variant="outline" asChild>
+                      <Link to="/projects">
+                        <ArrowLeft />
+                        Kembali ke project
+                      </Link>
+                    </Button>
+                  </EmptyContent>
+                </Empty>
+              ) : (
+                <div className="text-muted-foreground flex min-h-52 items-center justify-center gap-2 text-sm">
+                  <Spinner className="size-5" />
+                  Memuat project…
+                </div>
+              )}
+            </FramePanel>
+          </Frame>
+        </main>
       </div>
     )
   }
 
+  const editable = activePath ? isEditablePath(activePath) : false
+
   return (
-    <div className="flex h-svh flex-col">
-      <AppHeader user={user} />
+    <div className="bg-muted/30 flex h-svh flex-col overflow-hidden">
+      <AppHeader user={user} fluid />
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-2 border-b px-3 py-2">
-        <Button variant="ghost" size="icon" asChild aria-label="Kembali">
-          <Link to="/projects">
-            <ArrowLeft />
-          </Link>
-        </Button>
+      <main className="flex min-h-0 flex-1 p-2 sm:p-3">
+        <Frame spacing="xs" className="min-h-0 w-full flex-1 shadow-sm">
+          {/* Toolbar */}
+          <FramePanel fit className="p-0">
+            <div className="flex flex-wrap items-center gap-2 px-2 py-1.5">
+              <Button variant="ghost" size="icon" asChild aria-label="Kembali">
+                <Link to="/projects">
+                  <ArrowLeft />
+                </Link>
+              </Button>
 
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{project.name}</p>
-          <p className="text-muted-foreground truncate text-xs">
-            {activePath ?? "—"}
-            {dirty && " · belum disimpan"}
-          </p>
-        </div>
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleSave}
-          disabled={!dirty || saving || loadingFile}
-        >
-          {saving ? <Spinner /> : <Save />}
-          Simpan
-        </Button>
-
-        <div className="ml-auto flex items-center gap-2">
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            value={engine}
-            onValueChange={(v) => v && setEngine(v as CompileEngine)}
-          >
-            {ENGINES.map((e) => (
-              <ToggleGroupItem key={e} value={e} aria-label={e}>
-                {e}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-
-          <Button size="sm" onClick={handleCompile} disabled={compiling}>
-            {compiling ? <Spinner /> : <Play />}
-            Compile
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDownloadPdf}
-            disabled={downloadingPdf}
-            title="Unduh PDF hasil kompilasi terakhir"
-          >
-            {downloadingPdf ? <Spinner /> : <Download />}
-            PDF
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Pengaturan project"
-            onClick={() => setSettingsOpen(true)}
-          >
-            <Settings2 />
-          </Button>
-        </div>
-      </div>
-
-      {/* Body: 3 kolom */}
-      <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[220px_minmax(0,1fr)] lg:grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)]">
-        {/* File tree */}
-        <aside className="min-h-0 border-r bg-muted/20">
-          <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
-            <span className="text-xs font-medium">Files</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7"
-              aria-label="File baru"
-              onClick={() => setNewFileOpen(true)}
-            >
-              <FilePlus2 />
-            </Button>
-          </div>
-          <div className="h-[calc(100%-2.5rem)]">
-            <FileTree
-              files={files}
-              activePath={activePath}
-              mainFile={project.main_file}
-              onDownload={(p) => {
-                projectApi.downloadRaw(projectId, p).catch((err) => {
-                  handleError(err, "Gagal mengunduh file")
-                })
-              }}
-              onSelect={(p) => {
-                if (dirty) {
-                  const ok = window.confirm(
-                    "Ada perubahan belum disimpan. Pindah file tetap dilakukan?"
-                  )
-                  if (!ok) return
-                }
-                setActivePath(p)
-              }}
-            />
-          </div>
-        </aside>
-
-        {/* Editor */}
-        <section className="flex min-h-0 flex-col border-r">
-          <div className="min-h-0 flex-1 overflow-hidden">
-            {loadingFile ? (
-              <div className="text-muted-foreground flex h-full items-center justify-center gap-2 text-sm">
-                <Spinner />
-                Memuat file…
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-sm font-medium">{project.name}</p>
+                  {dirty && (
+                    <Badge
+                      variant="outline"
+                      className="h-5 shrink-0 px-1.5 text-[10px] font-normal"
+                    >
+                      Belum disimpan
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-muted-foreground truncate text-xs">
+                  {activePath ?? "Tidak ada file"}
+                </p>
               </div>
-            ) : activePath && !isEditablePath(activePath) ? (
-              <BinaryFileViewer
+
+              <div className="flex w-full items-center justify-between gap-2 sm:ml-auto sm:w-auto sm:justify-end">
+                <Select
+                  value={engine}
+                  onValueChange={(v) => setEngine(v as CompileEngine)}
+                >
+                  <SelectTrigger
+                    aria-label="Mesin kompilasi"
+                    className="h-8 w-[7.5rem]"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ENGINES.map((e) => (
+                      <SelectItem key={e} value={e}>
+                        {ENGINE_LABELS[e]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={!dirty || saving || loadingFile}
+                    aria-label="Simpan file"
+                    title="Simpan (Ctrl+S)"
+                  >
+                    {saving ? <Spinner /> : <Save />}
+                    <span className="hidden sm:inline">Simpan</span>
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    onClick={handleCompile}
+                    disabled={compiling}
+                    aria-label="Kompilasi"
+                    title="Kompilasi (Ctrl+Enter)"
+                  >
+                    {compiling ? <Spinner /> : <Play />}
+                    <span className="hidden sm:inline">Kompilasi</span>
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={handleDownloadPdf}
+                    disabled={downloadingPdf}
+                    aria-label="Unduh PDF"
+                    title="Unduh PDF hasil kompilasi terakhir"
+                  >
+                    {downloadingPdf ? <Spinner /> : <Download />}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Pengaturan project"
+                    title="Pengaturan project"
+                    onClick={() => setSettingsOpen(true)}
+                  >
+                    <Settings2 />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </FramePanel>
+
+          {/* Body: 3 kolom */}
+          <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,35svh)_minmax(0,1fr)] gap-1.5 md:grid-cols-[220px_minmax(0,1fr)] md:grid-rows-1 lg:grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)]">
+            {/* File tree */}
+            <FramePanel className="flex min-h-0 min-w-0 flex-col p-0">
+              <div className="bg-muted/20 flex shrink-0 items-center justify-between gap-2 border-b px-2.5 py-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium">Berkas</span>
+                  <Badge
+                    variant="secondary"
+                    className="h-5 px-1.5 text-[10px] font-normal tabular-nums"
+                  >
+                    {files.length}
+                  </Badge>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="File baru"
+                  title="File baru"
+                  onClick={() => setNewFileOpen(true)}
+                >
+                  <FilePlus2 />
+                </Button>
+              </div>
+              <ScrollArea className="min-h-0 flex-1">
+                <FileTree
+                  files={files}
+                  activePath={activePath}
+                  mainFile={project.main_file}
+                  onDownload={(p) => {
+                    projectApi.downloadRaw(projectId, p).catch((err) => {
+                      handleError(err, "Gagal mengunduh file")
+                    })
+                  }}
+                  onSelect={(p) => {
+                    if (dirty) {
+                      const ok = window.confirm(
+                        "Ada perubahan belum disimpan. Pindah file tetap dilakukan?",
+                      )
+                      if (!ok) return
+                    }
+                    setActivePath(p)
+                  }}
+                />
+              </ScrollArea>
+            </FramePanel>
+
+            {/* Editor */}
+            <FramePanel className="flex min-h-0 min-w-0 flex-col p-0">
+              <div className="bg-muted/20 flex shrink-0 items-center justify-between gap-2 border-b px-2.5 py-1.5">
+                <div className="flex min-w-0 items-center gap-2">
+                  {editable ? (
+                    <FileCode2 className="text-muted-foreground size-3.5 shrink-0" />
+                  ) : (
+                    <FileText className="text-muted-foreground size-3.5 shrink-0" />
+                  )}
+                  <span className="truncate text-xs font-medium">
+                    {activePath ?? "Editor"}
+                  </span>
+                  {dirty && (
+                    <span
+                      className="size-1.5 shrink-0 rounded-full bg-amber-500"
+                      title="Belum disimpan"
+                    />
+                  )}
+                </div>
+                {activePath && (
+                  <Badge
+                    variant="outline"
+                    className="h-5 shrink-0 px-1.5 text-[10px] font-normal"
+                  >
+                    {editable ? "LaTeX" : "Berkas"}
+                  </Badge>
+                )}
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-hidden">
+                {loadingFile ? (
+                  <div className="text-muted-foreground flex h-full items-center justify-center gap-2 text-sm">
+                    <Spinner />
+                    Memuat file…
+                  </div>
+                ) : activePath && !isEditablePath(activePath) ? (
+                  <BinaryFileViewer
+                    projectId={projectId}
+                    path={activePath}
+                    onDownload={(p) => {
+                      projectApi.downloadRaw(projectId, p).catch((err) => {
+                        handleError(err, "Gagal mengunduh file")
+                      })
+                    }}
+                  />
+                ) : activePath ? (
+                  <LatexEditor
+                    value={content}
+                    onChange={setContent}
+                    dark={document.documentElement.classList.contains("dark")}
+                    gotoLine={pendingLine}
+                  />
+                ) : (
+                  <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
+                    Pilih file untuk mulai mengedit.
+                  </div>
+                )}
+              </div>
+
+              {showErrorPanel && compileFailure && (
+                <CompileErrorPanel
+                  projectId={projectId}
+                  failure={compileFailure}
+                  onClose={() => setShowErrorPanel(false)}
+                  onOpenLocation={handleOpenLocation}
+                />
+              )}
+            </FramePanel>
+
+            {/* Preview */}
+            <FramePanel className="hidden min-h-0 min-w-0 flex-col p-0 lg:flex">
+              <PdfPreview
                 projectId={projectId}
-                path={activePath}
-                onDownload={(p) => {
-                  projectApi.downloadRaw(projectId, p).catch((err) => {
-                    handleError(err, "Gagal mengunduh file")
-                  })
-                }}
+                version={pdfVersion}
+                fetchPdf={fetchPdf}
+                compiling={compiling}
               />
-            ) : activePath ? (
-              <LatexEditor
-                value={content}
-                onChange={setContent}
-                dark={document.documentElement.classList.contains("dark")}
-                gotoLine={pendingLine}
-              />
-            ) : (
-              <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
-                Pilih file untuk mulai mengedit.
-              </div>
-            )}
+            </FramePanel>
           </div>
-
-          {showErrorPanel && compileFailure && (
-            <CompileErrorPanel
-              projectId={projectId}
-              failure={compileFailure}
-              onClose={() => setShowErrorPanel(false)}
-              onOpenLocation={handleOpenLocation}
-            />
-          )}
-        </section>
-
-        {/* Preview */}
-        <section className="hidden min-h-0 lg:block">
-          <PdfPreview
-            projectId={projectId}
-            version={pdfVersion}
-            fetchPdf={fetchPdf}
-            compiling={compiling}
-          />
-        </section>
-      </div>
+        </Frame>
+      </main>
 
       <SaveFileDialog
         open={newFileOpen}

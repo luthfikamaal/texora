@@ -17,12 +17,22 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { formatBytes, useFileUpload } from "@/hooks/use-file-upload"
 import { ApiError } from "@/lib/api"
 import type { ImportResponse } from "@/lib/project-types"
 import { MAX_ZIP_BYTES } from "@/lib/project-types"
+import { cn } from "@/lib/utils"
 
 /**
  * Import project dari .zip.
@@ -40,7 +50,7 @@ export function ImportProjectDialog({
   onImport: (
     file: File,
     name?: string,
-    description?: string
+    description?: string,
   ) => Promise<ImportResponse>
 }) {
   const [name, setName] = useState("")
@@ -85,9 +95,7 @@ export function ImportProjectDialog({
           setFormError("Berkas melebihi 30 MB")
           return
         }
-        setFormError(
-          err.fields?.file ?? err.fields?.name ?? err.message
-        )
+        setFormError(err.fields?.file ?? err.fields?.name ?? err.message)
         return
       }
       setFormError("Tidak dapat terhubung ke server.")
@@ -98,8 +106,8 @@ export function ImportProjectDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="flex h-[90svh] max-h-[36rem] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+        <DialogHeader className="shrink-0 px-4 pt-4 pb-2">
           <DialogTitle>Import project</DialogTitle>
           <DialogDescription>
             Unggah berkas <code>.zip</code> berisi file LaTeX. Struktur folder
@@ -108,115 +116,122 @@ export function ImportProjectDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4">
-          <Field data-invalid={state.errors.length > 0 || !!formError}>
-            <FieldLabel>Berkas ZIP</FieldLabel>
+        <ScrollArea className="min-h-0 flex-1">
+          <div className="flex flex-col gap-3 px-4 py-3">
+            <Field data-invalid={state.errors.length > 0 || !!formError}>
+              <FieldLabel>Berkas ZIP</FieldLabel>
 
-            {pickedFile ? (
-              <div className="flex items-center gap-3 rounded-lg border p-3">
-                <div className="bg-muted flex size-9 shrink-0 items-center justify-center rounded-md">
-                  <FileArchive className="size-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">
-                    {pickedFile.name}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {formatBytes(pickedFile.size)}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Hapus berkas"
-                  onClick={() => actions.clearFiles()}
+              {pickedFile ? (
+                <Item variant="muted" size="sm">
+                  <ItemMedia variant="icon">
+                    <FileArchive />
+                  </ItemMedia>
+                  <ItemContent>
+                    <ItemTitle>{pickedFile.name}</ItemTitle>
+                    <ItemDescription>
+                      {formatBytes(pickedFile.size)}
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Hapus berkas"
+                      onClick={() => actions.clearFiles()}
+                    >
+                      <X />
+                    </Button>
+                  </ItemActions>
+                </Item>
+              ) : (
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Pilih atau tarik berkas ZIP"
+                  onClick={actions.openFileDialog}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
+                      actions.openFileDialog()
+                    }
+                  }}
+                  onDragEnter={actions.handleDragEnter}
+                  onDragLeave={actions.handleDragLeave}
+                  onDragOver={actions.handleDragOver}
+                  onDrop={actions.handleDrop}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 rounded-lg border-2 border-dashed p-3.5 text-left transition-colors",
+                    state.isDragging
+                      ? "border-primary bg-muted/60"
+                      : "hover:bg-muted/40",
+                  )}
                 >
-                  <X />
-                </Button>
-              </div>
-            ) : (
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label="Pilih atau tarik berkas ZIP"
-                onClick={actions.openFileDialog}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault()
-                    actions.openFileDialog()
-                  }
-                }}
-                onDragEnter={actions.handleDragEnter}
-                onDragLeave={actions.handleDragLeave}
-                onDragOver={actions.handleDragOver}
-                onDrop={actions.handleDrop}
-                className={
-                  state.isDragging
-                    ? "border-primary bg-muted/60 flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-8 text-center"
-                    : "hover:bg-muted/40 flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors"
-                }
-              >
-                <UploadCloud className="text-muted-foreground size-6" />
-                <p className="text-sm font-medium">
-                  Tarik berkas ke sini atau klik untuk memilih
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  Maksimal {formatBytes(MAX_ZIP_BYTES, 0)} · hanya .zip
-                </p>
-              </div>
+                  <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-lg">
+                    <UploadCloud className="text-muted-foreground size-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">
+                      Tarik .zip atau klik untuk memilih
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      Maksimal {formatBytes(MAX_ZIP_BYTES, 0)} · hanya .zip
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <input {...actions.getInputProps({ className: "sr-only" })} />
+
+              <FieldDescription className="text-xs">
+                Maks. hasil ekstrak 100 MB · 500 file · 15 MB per file. Folder
+                seperti <code>__MACOSX/</code>, <code>.git/</code>, dan{" "}
+                <code>node_modules/</code> dilewati.
+              </FieldDescription>
+              {state.errors.length > 0 && (
+                <FieldError>{state.errors.join(", ")}</FieldError>
+              )}
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="import-name">
+                Nama project (opsional)
+              </FieldLabel>
+              <Input
+                id="import-name"
+                placeholder="Kosongkan untuk memakai nama berkas"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={100}
+              />
+              <FieldDescription className="text-xs">
+                Bila nama sudah dipakai, server menambahkan akhiran “ (2)”.
+              </FieldDescription>
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="import-description">
+                Deskripsi (opsional)
+              </FieldLabel>
+              <Textarea
+                id="import-description"
+                rows={2}
+                maxLength={500}
+                placeholder="Catatan singkat tentang project"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </Field>
+
+            {formError && (
+              <p className="text-destructive text-sm" role="alert">
+                {formError}
+              </p>
             )}
+          </div>
+        </ScrollArea>
 
-            <input {...actions.getInputProps()} />
-
-            <FieldDescription>
-              Maks. hasil ekstrak 100 MB · 500 file · 15 MB per file. Folder
-              seperti <code>__MACOSX/</code>, <code>.git/</code>, dan{" "}
-              <code>node_modules/</code> dilewati.
-            </FieldDescription>
-            {state.errors.length > 0 && (
-              <FieldError>{state.errors.join(", ")}</FieldError>
-            )}
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="import-name">
-              Nama project (opsional)
-            </FieldLabel>
-            <Input
-              id="import-name"
-              placeholder="Kosongkan untuk memakai nama berkas"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={100}
-            />
-            <FieldDescription>
-              Bila nama sudah dipakai, server menambahkan akhiran “ (2)”.
-            </FieldDescription>
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="import-description">
-              Deskripsi (opsional)
-            </FieldLabel>
-            <Textarea
-              id="import-description"
-              rows={2}
-              maxLength={500}
-              placeholder="Catatan singkat tentang project"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </Field>
-
-          {formError && (
-            <p className="text-destructive text-sm" role="alert">
-              {formError}
-            </p>
-          )}
-        </div>
-
-        <DialogFooter>
+        <DialogFooter className="mx-0 mb-0 shrink-0 rounded-b-xl">
           <Button
             type="button"
             variant="outline"

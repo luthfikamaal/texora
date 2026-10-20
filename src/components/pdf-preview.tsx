@@ -12,6 +12,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Spinner } from "@/components/ui/spinner"
 
 // Worker pdf.js diambil dari paket pdfjs-dist (Vite akan mem-bundle sebagai aset).
@@ -35,7 +36,7 @@ export function PdfPreview({
   projectId: string
   /** Naikkan angka ini untuk memaksa ambil ulang setelah compile. */
   version: number
-  fetchPdf: (id: string) => Promise<string>
+  fetchPdf: (id: string, signal?: AbortSignal) => Promise<string>
   compiling: boolean
 }) {
   const [url, setUrl] = useState<string | null>(null)
@@ -62,12 +63,13 @@ export function PdfPreview({
   useEffect(() => {
     let cancelled = false
     let created: string | null = null
+    const controller = new AbortController()
 
     async function load() {
       setLoading(true)
       setError(null)
       try {
-        const objectUrl = await fetchPdf(projectId)
+        const objectUrl = await fetchPdf(projectId, controller.signal)
         if (cancelled) {
           URL.revokeObjectURL(objectUrl)
           return
@@ -88,6 +90,9 @@ export function PdfPreview({
 
     return () => {
       cancelled = true
+      // Hentikan unduhan lama supaya tidak menumpuk dan menghabiskan
+      // koneksi saat compile berikutnya selesai.
+      controller.abort()
       if (created) URL.revokeObjectURL(created)
     }
   }, [projectId, version, fetchPdf])
@@ -131,7 +136,7 @@ export function PdfPreview({
   return (
     <div className="flex h-full flex-col">
       {/* Toolbar milik kita sendiri */}
-      <div className="bg-muted/40 flex items-center justify-between gap-2 border-b px-2 py-1">
+      <div className="bg-muted/40 flex shrink-0 items-center justify-between gap-2 border-b px-2 py-1">
         <span className="text-muted-foreground pl-1 text-xs">
           {numPages > 0 ? `${numPages} halaman` : "PDF"}
         </span>
@@ -162,33 +167,37 @@ export function PdfPreview({
 
       <div
         ref={containerRef}
-        className="bg-muted/20 min-h-0 flex-1 overflow-auto"
+        className="bg-muted/20 min-h-0 flex-1 overflow-hidden"
       >
-        <Document
-          file={file}
-          onLoadSuccess={({ numPages: n }) => setNumPages(n)}
-          onLoadError={(err) =>
-            setError(err?.message ?? "PDF tidak dapat dibaca")
-          }
-          loading={
-            <div className="text-muted-foreground flex h-32 items-center justify-center gap-2 text-sm">
-              <Spinner />
-              Memuat PDF…
-            </div>
-          }
-          className="flex flex-col items-center gap-3 p-4"
-        >
-          {Array.from({ length: numPages }, (_, i) => (
-            <Page
-              key={`p-${i + 1}`}
-              pageNumber={i + 1}
-              width={pageWidth}
-              className="overflow-hidden rounded-sm bg-white shadow-sm"
-              renderAnnotationLayer={false}
-              renderTextLayer={false}
-            />
-          ))}
-        </Document>
+        <ScrollArea className="h-full">
+          <Document
+            file={file}
+            suspense={false}
+            onLoadSuccess={({ numPages: n }) => setNumPages(n)}
+            onLoadError={(err) =>
+              setError(err?.message ?? "PDF tidak dapat dibaca")
+            }
+            loading={
+              <div className="text-muted-foreground flex h-32 items-center justify-center gap-2 text-sm">
+                <Spinner />
+                Memuat PDF…
+              </div>
+            }
+            className="flex flex-col items-center gap-3 p-4"
+          >
+            {Array.from({ length: numPages }, (_, i) => (
+              <Page
+                key={`p-${i + 1}`}
+                pageNumber={i + 1}
+                width={pageWidth}
+                suspense={false}
+                className="overflow-hidden rounded-sm bg-white shadow-sm"
+                renderAnnotationLayer={false}
+                renderTextLayer={false}
+              />
+            ))}
+          </Document>
+        </ScrollArea>
       </div>
     </div>
   )

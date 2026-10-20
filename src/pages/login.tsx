@@ -1,20 +1,31 @@
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2 } from "lucide-react"
+import { CircleAlert } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { z } from "zod"
 
 import { AuthLayout } from "@/components/auth-layout"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
 import { ApiError } from "@/lib/api"
 import { authApi } from "@/lib/auth-api"
 import { persistAuthResponse } from "@/lib/session"
 
 const loginSchema = z.object({
-  email: z.string().trim().min(1, "Email wajib diisi").email("Email tidak valid"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email wajib diisi")
+    .email("Email tidak valid"),
   password: z.string().min(1, "Password wajib diisi"),
 })
 
@@ -81,45 +92,44 @@ export function LoginPage() {
       }
     >
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            autoComplete="email"
-            placeholder="nama@email.com"
-            aria-invalid={!!errors.email}
-            {...form.register("email")}
-          />
-          {errors.email && (
-            <p className="text-destructive text-xs">{errors.email.message}</p>
-          )}
-        </div>
+        <FieldGroup className="gap-4">
+          <Field data-invalid={!!errors.email}>
+            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              placeholder="nama@email.com"
+              disabled={isSubmitting}
+              aria-invalid={!!errors.email}
+              {...form.register("email")}
+            />
+            <FieldError errors={[errors.email]} />
+          </Field>
 
-        <div className="grid gap-2">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            aria-invalid={!!errors.password}
-            {...form.register("password")}
-          />
-          {errors.password && (
-            <p className="text-destructive text-xs">
-              {errors.password.message}
-            </p>
-          )}
-        </div>
+          <Field data-invalid={!!errors.password}>
+            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              disabled={isSubmitting}
+              aria-invalid={!!errors.password}
+              {...form.register("password")}
+            />
+            <FieldError errors={[errors.password]} />
+          </Field>
+        </FieldGroup>
 
         {formError && (
-          <p className="bg-destructive/10 text-destructive rounded-md px-3 py-2 text-sm">
-            {formError}
-          </p>
+          <Alert variant="destructive">
+            <CircleAlert />
+            <AlertDescription>{formError}</AlertDescription>
+          </Alert>
         )}
 
-        <Button type="submit" disabled={isSubmitting} className="mt-1">
-          {isSubmitting && <Loader2 className="animate-spin" />}
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+          {isSubmitting && <Spinner />}
           Masuk
         </Button>
       </form>

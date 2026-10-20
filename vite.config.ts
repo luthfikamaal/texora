@@ -16,6 +16,16 @@ export default defineConfig({
     chunkSizeWarningLimit: 900,
     rollupOptions: {
       output: {
+        // Server statis yang dipakai deployment tidak selalu memetakan .mjs ke
+        // JavaScript, sehingga worker pdf.js gagal dimuat sebagai module.
+        // Kirim sebagai .js agar MIME-nya benar.
+        assetFileNames: (assetInfo) => {
+          const name = assetInfo.names?.[0] ?? ''
+          if (name.endsWith('.mjs')) {
+            return 'assets/[name]-[hash].js'
+          }
+          return 'assets/[name]-[hash][extname]'
+        },
         manualChunks(id: string) {
           if (id.includes('node_modules')) {
             if (id.includes('@codemirror') || id.includes('@uiw')) {

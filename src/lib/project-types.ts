@@ -35,6 +35,29 @@ export type ProjectResponse = {
   project: Project
 }
 
+/** Template bawaan server (GET /api/v1/templates). */
+export type TemplateSummary = {
+  id: string
+  name: string
+  description: string
+  main_file: string
+  size_bytes: number
+}
+
+/** Template + isi file untuk pratinjau sebelum dipilih. */
+export type TemplateDetail = TemplateSummary & {
+  content: string
+}
+
+export type TemplateListResponse = {
+  templates: TemplateSummary[]
+  count: number
+}
+
+export type TemplateResponse = {
+  template: TemplateDetail
+}
+
 /**
  * Hasil POST /api/v1/projects/import (multipart: `file` wajib, `name` dan
  * `description` opsional). Server mendeteksi main file otomatis dan
@@ -92,7 +115,7 @@ export type CompileFailure = {
   line: number
   log_url: string
   errors: CompileIssue[]
-  warnings: CompileIssue[]
+  warnings: string[]
 }
 
 /** Hasil GET /compile-logs/{id} dan /compile-logs/latest. */
@@ -108,7 +131,7 @@ export type CompileLogDetail = {
   file: string
   line: number
   errors: CompileIssue[]
-  warnings: CompileIssue[]
+  warnings: string[]
   log: string
   created_at: string
 }
@@ -127,6 +150,8 @@ export type CompileLog = CompileFailure
 export type CreateProjectPayload = {
   name: string
   description?: string
+  /** ID template dari GET /api/v1/templates; kosong = main.tex default. */
+  template_id?: string
 }
 
 export type UpdateProjectPayload = {

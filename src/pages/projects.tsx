@@ -8,13 +8,7 @@ import { toast } from "sonner"
 import { AppHeader } from "@/components/app-header"
 import { CreateProjectDialog } from "@/components/create-project-dialog"
 import { ImportProjectDialog } from "@/components/import-project-dialog"
-import {
-  Frame,
-  FrameDescription,
-  FrameFooter,
-  FrameHeader,
-  FramePanel,
-} from "@/components/reui/frame"
+import { Frame, FramePanel } from "@/components/reui/frame"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -97,7 +91,7 @@ export function ProjectsPage({ user }: { user: User }) {
     try {
       await projectApi.remove(pendingDelete.id)
       setProjects((prev) =>
-        prev ? prev.filter((p) => p.id !== pendingDelete.id) : prev
+        prev ? prev.filter((p) => p.id !== pendingDelete.id) : prev,
       )
       toast.success("Project dihapus")
       setPendingDelete(null)
@@ -114,10 +108,17 @@ export function ProjectsPage({ user }: { user: User }) {
     <div className="min-h-svh">
       <AppHeader user={user} />
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-8">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Project</h1>
+      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-10">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight">Project</h1>
+              {projects !== null && (
+                <Badge variant="secondary" className="tabular-nums">
+                  {projects.length}
+                </Badge>
+              )}
+            </div>
             <p className="text-muted-foreground text-sm">
               Dokumen LaTeX milikmu.
             </p>
@@ -137,21 +138,26 @@ export function ProjectsPage({ user }: { user: User }) {
         {projects === null ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-36 rounded-xl" />
+              <Skeleton key={i} className="h-32 rounded-xl" />
             ))}
           </div>
         ) : projects.length === 0 ? (
-          <Empty className="border">
+          <Empty className="border py-14">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <FileText />
               </EmptyMedia>
               <EmptyTitle>Belum ada project</EmptyTitle>
               <EmptyDescription>
-                Buat project pertama untuk mulai menulis LaTeX.
+                Buat project pertama untuk mulai menulis LaTeX, atau impor
+                project yang sudah ada.
               </EmptyDescription>
             </EmptyHeader>
-            <EmptyContent>
+            <EmptyContent className="flex-row flex-wrap justify-center gap-2">
+              <Button variant="outline" onClick={() => setImportOpen(true)}>
+                <Upload />
+                Import .zip
+              </Button>
               <Button onClick={() => setCreateOpen(true)}>
                 <Plus />
                 Project baru
@@ -161,15 +167,24 @@ export function ProjectsPage({ user }: { user: User }) {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {projects.map((p) => (
-              <Frame key={p.id} spacing="xs">
-                <FramePanel>
-                  <FrameHeader>
+              <Frame
+                key={p.id}
+                spacing="xs"
+                className="group shadow-xs transition-colors hover:border-primary/30"
+              >
+                <FramePanel className="flex h-full flex-col p-0">
+                  <div className="flex flex-1 flex-col gap-2 p-3">
                     <div className="flex items-start justify-between gap-2">
                       <Link
                         to={`/projects/${p.id}`}
-                        className="line-clamp-2 font-semibold hover:underline"
+                        className="flex min-w-0 items-start gap-2.5"
                       >
-                        {p.name}
+                        <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-md border transition-colors group-hover:text-foreground">
+                          <FileText className="size-4" />
+                        </span>
+                        <span className="line-clamp-2 pt-1 text-sm font-semibold group-hover:underline">
+                          {p.name}
+                        </span>
                       </Link>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -195,18 +210,18 @@ export function ProjectsPage({ user }: { user: User }) {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                    <FrameDescription className="line-clamp-2 min-h-8">
+                    <p className="text-muted-foreground line-clamp-2 min-h-8 text-sm">
                       {p.description || "Tanpa deskripsi"}
-                    </FrameDescription>
-                  </FrameHeader>
-                  <FrameFooter>
-                    <div className="flex w-full items-center justify-between gap-2">
-                      <Badge variant="secondary">{p.file_count} file</Badge>
-                      <span className="text-muted-foreground text-xs">
-                        {relative(p.files_updated_at)}
-                      </span>
-                    </div>
-                  </FrameFooter>
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 border-t bg-muted/20 px-3 py-2">
+                    <Badge variant="secondary" className="font-normal">
+                      {p.file_count} file
+                    </Badge>
+                    <span className="text-muted-foreground text-xs">
+                      {relative(p.files_updated_at)}
+                    </span>
+                  </div>
                 </FramePanel>
               </Frame>
             ))}

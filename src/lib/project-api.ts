@@ -11,6 +11,8 @@ import type {
   ProjectDetailResponse,
   ProjectListResponse,
   ProjectResponse,
+  TemplateListResponse,
+  TemplateResponse,
   UpdateProjectPayload,
 } from "./project-types"
 import { getValidAccessToken } from "./session"
@@ -53,6 +55,21 @@ export const projectApi = {
       body: JSON.stringify(payload),
       token,
     })
+  },
+
+  /** Daftar template bawaan server (tanpa isi file). */
+  async listTemplates() {
+    const token = await requireToken()
+    return apiFetch<TemplateListResponse>("/api/v1/templates", { token })
+  },
+
+  /** Detail template beserta isi file untuk pratinjau. */
+  async getTemplate(id: string) {
+    const token = await requireToken()
+    return apiFetch<TemplateResponse>(
+      `/api/v1/templates/${encodeURIComponent(id)}`,
+      { token }
+    )
   },
 
   async get(id: string) {
@@ -294,10 +311,11 @@ export const projectApi = {
    * Ambil PDF sebagai blob URL (iframe tidak bisa kirim header Authorization).
    * Pemanggil wajib `URL.revokeObjectURL` saat selesai.
    */
-  async fetchPdfObjectUrl(id: string): Promise<string> {
+  async fetchPdfObjectUrl(id: string, signal?: AbortSignal): Promise<string> {
     const token = await requireToken()
     const res = await fetch(`${API_BASE_URL}${base(id)}/pdf`, {
       headers: { Authorization: `Bearer ${token}` },
+      signal,
     })
     if (!res.ok) {
       const err = new ApiError(
