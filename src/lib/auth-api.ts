@@ -1,10 +1,9 @@
 import { apiFetch } from "./api"
 import type {
   AuthResponse,
-  LoginPayload,
+  GoogleAuthPayload,
   MeResponse,
   RefreshResponse,
-  RegisterPayload,
 } from "./auth-types"
 
 /**
@@ -12,16 +11,9 @@ import type {
  * Base URL diatur lewat VITE_API_BASE_URL (lihat src/lib/api.ts).
  */
 export const authApi = {
-  /** Register langsung mengembalikan token + user (201). */
-  register(payload: RegisterPayload) {
-    return apiFetch<AuthResponse>("/api/v1/auth/register", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    })
-  },
-
-  login(payload: LoginPayload) {
-    return apiFetch<AuthResponse>("/api/v1/auth/login", {
+  /** Tukar Google ID token dengan token pair Texora. */
+  google(payload: GoogleAuthPayload) {
+    return apiFetch<AuthResponse>("/api/v1/auth/google", {
       method: "POST",
       body: JSON.stringify(payload),
     })

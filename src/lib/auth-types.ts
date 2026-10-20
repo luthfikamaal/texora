@@ -8,7 +8,7 @@ export type User = {
   created_at: string
 }
 
-/** Response sukses register & login (flat, bukan nested). */
+/** Response sukses login (flat, bukan nested). */
 export type AuthResponse = {
   access_token: string
   refresh_token: string
@@ -30,15 +30,9 @@ export type MeResponse = {
   user: User
 }
 
-export type RegisterPayload = {
-  email: string
-  password: string
-  display_name?: string
-}
-
-export type LoginPayload = {
-  email: string
-  password: string
+/** ID token (credential) dari Google Identity Services. */
+export type GoogleAuthPayload = {
+  credential: string
 }
 
 /** Token pair yang disimpan di session. */

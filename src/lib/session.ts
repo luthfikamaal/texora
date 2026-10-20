@@ -47,7 +47,7 @@ export function clearSession() {
   localStorage.removeItem(STORAGE_KEY)
 }
 
-/** Simpan hasil register/login. */
+/** Simpan hasil login. */
 export function persistAuthResponse(res: AuthResponse) {
   const session = toSession(res)
   saveSession(session)

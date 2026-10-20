@@ -1769,5 +1769,496 @@
       "command": "npx --yes prettier@3.6.2 --write --no-semi src/pages/projects.tsx && npm run build 2>&1 | tail -20"
     },
     "at": "2026-10-20T11:53:23.883Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "feature",
+    "metadata": {
+      "intent": "feature",
+      "selectedSkills": [
+        "react",
+        "software-engineering",
+        "codebase-intelligence",
+        "auth-identity"
+      ],
+      "suppressedSkills": [
+        "typescript"
+      ],
+      "confidence": 100
+    },
+    "at": "2026-10-20T12:02:42.307Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "react",
+    "metadata": {
+      "skill": "react",
+      "intent": "feature"
+    },
+    "at": "2026-10-20T12:02:42.308Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "software-engineering",
+    "metadata": {
+      "skill": "software-engineering",
+      "intent": "feature"
+    },
+    "at": "2026-10-20T12:02:42.309Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "codebase-intelligence",
+    "metadata": {
+      "skill": "codebase-intelligence",
+      "intent": "feature"
+    },
+    "at": "2026-10-20T12:02:42.310Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "auth-identity",
+    "metadata": {
+      "skill": "auth-identity",
+      "intent": "feature"
+    },
+    "at": "2026-10-20T12:02:42.311Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "auto_activation",
+    "metadata": {
+      "activate": true,
+      "confidence": 0.75,
+      "reason": "action request phrased as question",
+      "signals": [
+        "action_verb",
+        "question_mark",
+        "action_request_frame"
+      ]
+    },
+    "at": "2026-10-20T12:02:42.313Z"
+  },
+  {
+    "kind": "context_autocompaction",
+    "name": "checkpoint",
+    "metadata": {
+      "usagePercent": 0.836,
+      "tokensUsed": 167163,
+      "contextLimit": 200000,
+      "knownLimit": true
+    },
+    "at": "2026-10-20T12:02:48.789Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run build 2>&1 | tail -8",
+    "metadata": {
+      "command": "npm run build 2>&1 | tail -8",
+      "status": "unknown"
+    },
+    "at": "2026-10-20T12:07:04.388Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run build 2>&1 | tail -8",
+    "metadata": {
+      "skill": "react",
+      "passed": false,
+      "command": "npm run build 2>&1 | tail -8"
+    },
+    "at": "2026-10-20T12:07:04.390Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "general",
+    "metadata": {
+      "intent": "general",
+      "selectedSkills": [
+        "software-engineering",
+        "ui-pattern-library",
+        "react",
+        "typescript"
+      ],
+      "suppressedSkills": [],
+      "confidence": 35
+    },
+    "at": "2026-10-20T12:09:39.568Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "software-engineering",
+    "metadata": {
+      "skill": "software-engineering",
+      "intent": "general"
+    },
+    "at": "2026-10-20T12:09:39.569Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "ui-pattern-library",
+    "metadata": {
+      "skill": "ui-pattern-library",
+      "intent": "general"
+    },
+    "at": "2026-10-20T12:09:39.571Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "react",
+    "metadata": {
+      "skill": "react",
+      "intent": "general"
+    },
+    "at": "2026-10-20T12:09:39.572Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "typescript",
+    "metadata": {
+      "skill": "typescript",
+      "intent": "general"
+    },
+    "at": "2026-10-20T12:09:39.573Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "auto_activation",
+    "metadata": {
+      "activate": false,
+      "confidence": 0.1,
+      "reason": "no concrete action verb",
+      "signals": []
+    },
+    "at": "2026-10-20T12:09:39.575Z"
+  },
+  {
+    "kind": "skill_final_used",
+    "name": "ui-pattern-library",
+    "metadata": {
+      "skill": "ui-pattern-library",
+      "source": "system_injection"
+    },
+    "at": "2026-10-20T12:09:40.738Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run build 2>&1 | tail -8",
+    "metadata": {
+      "command": "npm run build 2>&1 | tail -8",
+      "status": "unknown"
+    },
+    "at": "2026-10-20T12:11:06.442Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run build 2>&1 | tail -8",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "npm run build 2>&1 | tail -8"
+    },
+    "at": "2026-10-20T12:11:06.445Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "config",
+    "metadata": {
+      "intent": "config",
+      "selectedSkills": [],
+      "suppressedSkills": [],
+      "confidence": 0
+    },
+    "at": "2026-10-20T12:32:26.370Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "auto_activation",
+    "metadata": {
+      "activate": true,
+      "confidence": 0.85,
+      "reason": "direct action instruction",
+      "signals": [
+        "action_verb"
+      ]
+    },
+    "at": "2026-10-20T12:32:26.374Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "ls src/pages src/lib src/components; cat package.json; cat src/lib/auth-types.ts; cat src/lib/session.ts",
+    "metadata": {
+      "command": "ls src/pages src/lib src/components; cat package.json; cat src/lib/auth-types.ts; cat src/lib/session.ts",
+      "status": "fail"
+    },
+    "at": "2026-10-20T12:32:38.925Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "ls src/pages src/lib src/components; cat package.json; cat src/lib/auth-types.ts; cat src/lib/session.ts",
+    "metadata": {
+      "skill": "unknown",
+      "passed": false,
+      "command": "ls src/pages src/lib src/components; cat package.json; cat src/lib/auth-types.ts; cat src/lib/session.ts"
+    },
+    "at": "2026-10-20T12:32:38.927Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "cat src/pages/login.tsx; cat src/pages/register.tsx; cat src/components/require-auth.tsx; cat src/App.tsx 2>/dev/null || true; ls src",
+    "metadata": {
+      "command": "cat src/pages/login.tsx; cat src/pages/register.tsx; cat src/components/require-auth.tsx; cat src/App.tsx 2>/dev/null || true; ls src",
+      "status": "fail"
+    },
+    "at": "2026-10-20T12:32:44.631Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "cat src/pages/login.tsx; cat src/pages/register.tsx; cat src/components/require-auth.tsx; cat src/App.tsx 2>/dev/null || true; ls src",
+    "metadata": {
+      "skill": "unknown",
+      "passed": false,
+      "command": "cat src/pages/login.tsx; cat src/pages/register.tsx; cat src/components/require-auth.tsx; cat src/App.tsx 2>/dev/null || true; ls src"
+    },
+    "at": "2026-10-20T12:32:44.633Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm uninstall next-auth",
+    "metadata": {
+      "command": "npm uninstall next-auth",
+      "status": "unknown"
+    },
+    "at": "2026-10-20T12:39:59.392Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm uninstall next-auth",
+    "metadata": {
+      "skill": "unknown",
+      "passed": false,
+      "command": "npm uninstall next-auth"
+    },
+    "at": "2026-10-20T12:39:59.393Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run build",
+    "metadata": {
+      "command": "npm run build",
+      "status": "unknown"
+    },
+    "at": "2026-10-20T12:41:24.040Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run build",
+    "metadata": {
+      "skill": "unknown",
+      "passed": false,
+      "command": "npm run build"
+    },
+    "at": "2026-10-20T12:41:24.044Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run lint",
+    "metadata": {
+      "command": "npm run lint",
+      "status": "fail"
+    },
+    "at": "2026-10-20T12:41:52.289Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run lint",
+    "metadata": {
+      "skill": "unknown",
+      "passed": false,
+      "command": "npm run lint"
+    },
+    "at": "2026-10-20T12:41:52.292Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run lint 2>&1 | grep -E \"google-sign-in|login|error\" -i | head -30",
+    "metadata": {
+      "command": "npm run lint 2>&1 | grep -E \"google-sign-in|login|error\" -i | head -30",
+      "status": "fail"
+    },
+    "at": "2026-10-20T12:44:21.430Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run lint 2>&1 | grep -E \"google-sign-in|login|error\" -i | head -30",
+    "metadata": {
+      "skill": "unknown",
+      "passed": false,
+      "command": "npm run lint 2>&1 | grep -E \"google-sign-in|login|error\" -i | head -30"
+    },
+    "at": "2026-10-20T12:44:21.433Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run build 2>&1 | tail -12",
+    "metadata": {
+      "command": "npm run build 2>&1 | tail -12",
+      "status": "unknown"
+    },
+    "at": "2026-10-20T12:44:37.714Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run build 2>&1 | tail -12",
+    "metadata": {
+      "skill": "unknown",
+      "passed": false,
+      "command": "npm run build 2>&1 | tail -12"
+    },
+    "at": "2026-10-20T12:44:37.717Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "refactor",
+    "metadata": {
+      "intent": "refactor",
+      "selectedSkills": [
+        "software-engineering",
+        "react",
+        "typescript"
+      ],
+      "suppressedSkills": [],
+      "confidence": 90
+    },
+    "at": "2026-10-20T12:47:55.469Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "software-engineering",
+    "metadata": {
+      "skill": "software-engineering",
+      "intent": "refactor"
+    },
+    "at": "2026-10-20T12:47:55.472Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "react",
+    "metadata": {
+      "skill": "react",
+      "intent": "refactor"
+    },
+    "at": "2026-10-20T12:47:55.473Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "typescript",
+    "metadata": {
+      "skill": "typescript",
+      "intent": "refactor"
+    },
+    "at": "2026-10-20T12:47:55.475Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "auto_activation",
+    "metadata": {
+      "activate": false,
+      "confidence": 0.1,
+      "reason": "no concrete action verb",
+      "signals": []
+    },
+    "at": "2026-10-20T12:47:55.477Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "refactor",
+    "metadata": {
+      "intent": "refactor",
+      "selectedSkills": [
+        "software-engineering",
+        "react",
+        "typescript"
+      ],
+      "suppressedSkills": [],
+      "confidence": 90
+    },
+    "at": "2026-10-20T12:50:46.289Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "software-engineering",
+    "metadata": {
+      "skill": "software-engineering",
+      "intent": "refactor"
+    },
+    "at": "2026-10-20T12:50:46.291Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "react",
+    "metadata": {
+      "skill": "react",
+      "intent": "refactor"
+    },
+    "at": "2026-10-20T12:50:46.293Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "typescript",
+    "metadata": {
+      "skill": "typescript",
+      "intent": "refactor"
+    },
+    "at": "2026-10-20T12:50:46.294Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "auto_activation",
+    "metadata": {
+      "activate": false,
+      "confidence": 0.1,
+      "reason": "no concrete action verb",
+      "signals": []
+    },
+    "at": "2026-10-20T12:50:46.297Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run lint 2>&1 | grep -E \"google-sign-in|error\" -i | head -20",
+    "metadata": {
+      "command": "npm run lint 2>&1 | grep -E \"google-sign-in|error\" -i | head -20",
+      "status": "fail"
+    },
+    "at": "2026-10-20T12:52:35.861Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run lint 2>&1 | grep -E \"google-sign-in|error\" -i | head -20",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "npm run lint 2>&1 | grep -E \"google-sign-in|error\" -i | head -20"
+    },
+    "at": "2026-10-20T12:52:35.863Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run build 2>&1 | tail -8",
+    "metadata": {
+      "command": "npm run build 2>&1 | tail -8",
+      "status": "unknown"
+    },
+    "at": "2026-10-20T12:52:46.243Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run build 2>&1 | tail -8",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "npm run build 2>&1 | tail -8"
+    },
+    "at": "2026-10-20T12:52:46.246Z"
   }
 ]

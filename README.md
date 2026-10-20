@@ -1,6 +1,6 @@
 # Texora — Frontend
 
-SPA frontend untuk Texora. **React 19 + Vite + TypeScript + Tailwind v4 + shadcn/ui**, autentikasi lewat **Auth.js (NextAuth v5)** dengan backend Go.
+SPA frontend untuk Texora. **React 19 + Vite + TypeScript + Tailwind v4 + shadcn/ui**, autentikasi lewat **Google Identity Services** dengan backend Go.
 
 Live: **https://texora.emelka.my.id**
 
@@ -8,7 +8,7 @@ Live: **https://texora.emelka.my.id**
 
 ```bash
 npm install
-cp .env.example .env   # isi VITE_API_BASE_URL
+cp .env.example .env   # isi VITE_API_BASE_URL + VITE_GOOGLE_CLIENT_ID
 npm run dev            # http://localhost:5173
 ```
 
@@ -25,18 +25,22 @@ npm run build          # hasil di dist/
 | Variabel | Keterangan |
 |---|---|
 | `VITE_API_BASE_URL` | Base URL backend, tanpa trailing slash. Contoh: `https://api-texora.emelka.my.id` |
+| `VITE_GOOGLE_CLIENT_ID` | OAuth 2.0 Client ID dari Google Cloud Console |
 
-Dibaca lewat satu wrapper `src/lib/api.ts` (`apiFetch`), dan tipenya dideklarasikan di `src/vite-env.d.ts`.
+Dibaca lewat `src/lib/api.ts` (`apiFetch`) dan `src/components/google-sign-in.tsx`, tipenya dideklarasikan di `src/vite-env.d.ts`.
+
+Pastikan origin aplikasi (`http://localhost:5173` dan domain produksi) terdaftar di **Authorized JavaScript origins** pada OAuth client Google.
 
 ## Halaman
 
 | Route | Isi |
 |---|---|
-| `/register` | Nama (opsional, `display_name`), email, password, konfirmasi password |
-| `/login` | Email, password |
-| `/dashboard` | Placeholder — menampilkan profil dari `GET /api/v1/me` + tombol keluar |
+| `/login` | Masuk dengan Google |
+| `/register` | Dialihkan ke `/login` — registrasi manual dinonaktifkan |
+| `/projects` | Daftar project |
+| `/projects/:projectId` | Editor project |
 
-Register & login sukses langsung menyimpan token dan masuk ke `/dashboard`.
+Login Google otomatis membuat akun Texora baru bila email belum terdaftar.
 
 ## Struktur
 
@@ -44,15 +48,15 @@ Register & login sukses langsung menyimpan token dan masuk ke `/dashboard`.
 src/
 ├── components/
 │   ├── auth-layout.tsx      # kartu terpusat untuk halaman auth
-│   └── ui/                  # primitif shadcn (button, input, label, card)
+│   ├── google-sign-in.tsx   # tombol Google Identity Services
+│   └── ui/                  # primitif shadcn
 ├── lib/
 │   ├── api.ts               # apiFetch + ApiError (parse envelope error)
 │   ├── auth-api.ts          # semua panggilan endpoint auth
 │   ├── auth-types.ts        # tipe sesuai docs API
-│   ├── auth.ts              # konfigurasi Auth.js (Credentials)
 │   ├── session.ts           # simpan token + auto-refresh
 │   └── utils.ts             # cn()
-├── pages/                   # register, login, dashboard
+├── pages/                   # login, projects, project-editor
 ├── App.tsx                  # routing
 └── main.tsx                 # entry + BrowserRouter
 ```
@@ -61,22 +65,20 @@ src/
 
 Mengikuti `https://api-texora.emelka.my.id/docs/API.md`:
 
-- `POST /api/v1/auth/register` → **201** `{access_token, refresh_token, token_type, expires_in, refresh_expires_in, user}`
-- `POST /api/v1/auth/login` → **200** bentuk sama
+- `POST /api/v1/auth/google` → **200** `{access_token, refresh_token, token_type, expires_in, refresh_expires_in, user}`; body `{credential}` dari Google Identity Services
 - `POST /api/v1/auth/refresh` → rotasi token (refresh token **sekali pakai**)
 - `POST /api/v1/auth/logout` → **204**
 - `GET  /api/v1/me` → `{user}` (butuh Bearer)
 
 Field user: `id` (UUID), `email`, `display_name`, `email_verified`, `created_at`.
 
-Error: `{ "error": { "code", "message", "fields"? } }` — `fields` dipetakan kembali ke input form lewat `form.setError()`.
+Error: `{ "error": { "code", "message", "fields"? } }`. Login Google memetakan `401` (token tidak valid), `403` (akun nonaktif), `422` (email belum terverifikasi), dan `503` (Google belum dikonfigurasi di server).
 
-## Model autentikasi (penting)
-
-Auth.js di sini berjalan **tanpa server**, jadi tidak bisa menandatangani cookie httpOnly.
+## Model autentikasi
 
 - **Sumber otoritas tetap JWT dari backend.** Access token 15 menit, refresh 30 hari, sekali pakai + rotasi.
-- Token disimpan di **`localStorage`** (`lib/session.ts`) dan di-refresh otomatis 60 detik sebelum kedaluwarsa.
+- Google mengembalikan ID token (`credential`), lalu frontend menukarnya lewat `POST /api/v1/auth/google`.
+- Token Texora disimpan di **`localStorage`** (`lib/session.ts`) dan di-refresh otomatis 60 detik sebelum kedaluwarsa.
 - **Tradeoff:** `localStorage` bisa dibaca XSS. Bila butuh lebih aman, langkah berikutnya adalah **BFF** (route server) yang menyimpan refresh token di cookie httpOnly dan meneruskan request ke API.
 
 ## Deploy
@@ -98,6 +100,7 @@ npm run build && systemctl reload nginx
 
 ## Catatan
 
-- `password` dibatasi 8–72 karakter — 72 adalah batas input bcrypt, memvalidasi lebih dari itu menyesatkan.
-- `confirmPassword` hanya validasi klien, **tidak pernah** dikirim ke API.
+- Login email/password dan registrasi manual dinonaktifkan di frontend.
+- Akun yang dibuat lewat Google tidak punya password.
+- Backend hanya menerima `credential` Google yang sudah diverifikasi; client ID tidak dianggap sebagai bukti autentikasi.
 - CORS backend mengizinkan `https://texora.emelka.my.id`, `http://localhost:3000`, `http://localhost:5173`.
