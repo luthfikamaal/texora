@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import {
   ArrowLeft,
+  BookOpen,
   Download,
   FileCode2,
   FilePlus2,
@@ -9,10 +10,13 @@ import {
   Play,
   Save,
   Settings2,
+  Sparkles,
 } from "lucide-react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { toast } from "sonner"
 
+import { AgentDialog } from "@/components/agent/agent-dialog"
+import { AiAssistantDialog } from "@/components/ai-assistant-dialog"
 import { AppHeader } from "@/components/app-header"
 import { BinaryFileViewer } from "@/components/binary-file-viewer"
 import { CompileErrorPanel } from "@/components/compile-error-panel"
@@ -85,6 +89,8 @@ export function ProjectEditorPage({ user }: { user: User }) {
 
   const [newFileOpen, setNewFileOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
+  const [agentOpen, setAgentOpen] = useState(false)
 
   const dirty = content !== original
 
@@ -103,6 +109,38 @@ export function ProjectEditorPage({ user }: { user: User }) {
     },
     [navigate],
   )
+
+  /** Muat ulang metadata + file setelah AI menerapkan/membatalkan edit. */
+  const reloadAfterAi = useCallback(async () => {
+    try {
+      const res = await projectApi.get(projectId)
+      setProject(res.project)
+      setFiles(res.files)
+
+      const stillThere = activePath
+        ? res.files.some((f) => f.path === activePath)
+        : false
+      if (activePath && stillThere && isEditablePath(activePath)) {
+        const file = await projectApi.getFile(projectId, activePath)
+        setContent(file.file.content)
+        setOriginal(file.file.content)
+      } else if (activePath && !stillThere) {
+        const next =
+          res.files.find((f) => f.path === res.project.main_file)?.path ??
+          res.files[0]?.path ??
+          null
+        setActivePath(next)
+      }
+    } catch (err) {
+      handleError(err, "File AI berubah, tetapi project gagal dimuat ulang")
+    }
+  }, [projectId, activePath, handleError])
+
+  /** Setelah agent menerapkan bab: muat ulang file + segarkan PDF. */
+  const reloadAfterAgent = useCallback(async () => {
+    await reloadAfterAi()
+    setPdfVersion((v) => v + 1)
+  }, [reloadAfterAi])
 
   // Muat detail project + daftar file
   useEffect(() => {
@@ -374,6 +412,28 @@ export function ProjectEditorPage({ user }: { user: User }) {
                     <span className="hidden sm:inline">Simpan</span>
                   </Button>
 
+          <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setAgentOpen(true)}
+          aria-label="Buka buku ajar"
+          title="Buku Ajar"
+          >
+          <BookOpen />
+          <span className="hidden sm:inline">Buku</span>
+          </Button>
+
+          <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setAiOpen(true)}
+          aria-label="Buka asisten AI"
+          title="Asisten AI"
+          >
+          <Sparkles />
+          <span className="hidden sm:inline">AI</span>
+          </Button>
+
                   <Button
                     size="sm"
                     onClick={handleCompile}
@@ -538,6 +598,25 @@ export function ProjectEditorPage({ user }: { user: User }) {
           </div>
         </Frame>
       </main>
+
+      <AgentDialog
+        open={agentOpen}
+        onOpenChange={setAgentOpen}
+        projectId={projectId}
+        projectName={project.name}
+        onApplied={reloadAfterAgent}
+      />
+
+      <AiAssistantDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        projectId={projectId}
+        projectName={project.name}
+        userName={user.display_name}
+        fileCount={files.length}
+        hasUnsavedChanges={dirty}
+        onFilesChanged={reloadAfterAi}
+      />
 
       <SaveFileDialog
         open={newFileOpen}
