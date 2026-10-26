@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,
-  BookOpen,
   Download,
   FileCode2,
   FilePlus2,
@@ -10,7 +9,6 @@ import {
   Play,
   Save,
   Settings2,
-  Sparkles,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
