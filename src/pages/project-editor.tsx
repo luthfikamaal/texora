@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,
   BookOpen,
@@ -11,31 +11,31 @@ import {
   Save,
   Settings2,
   Sparkles,
-} from "lucide-react"
-import { Link, useNavigate, useParams } from "react-router-dom"
-import { toast } from "sonner"
+} from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
-import { AgentDialog } from "@/components/agent/agent-dialog"
-import { AiAssistantDialog } from "@/components/ai-assistant-dialog"
-import { AppHeader } from "@/components/app-header"
-import { BinaryFileViewer } from "@/components/binary-file-viewer"
-import { CompileErrorPanel } from "@/components/compile-error-panel"
-import { FileTree } from "@/components/file-tree"
-import { LatexEditor } from "@/components/latex-editor"
-import { PdfPreview } from "@/components/pdf-preview"
-import { ProjectSettingsDialog } from "@/components/project-settings-dialog"
-import { Frame, FramePanel } from "@/components/reui/frame"
-import { SaveFileDialog } from "@/components/save-file-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { AgentDialog } from "@/components/agent/agent-dialog";
+import { AiAssistantDialog } from "@/components/ai-assistant-dialog";
+import { AppHeader } from "@/components/app-header";
+import { BinaryFileViewer } from "@/components/binary-file-viewer";
+import { CompileErrorPanel } from "@/components/compile-error-panel";
+import { FileTree } from "@/components/file-tree";
+import { LatexEditor } from "@/components/latex-editor";
+import { PdfPreview } from "@/components/pdf-preview";
+import { ProjectSettingsDialog } from "@/components/project-settings-dialog";
+import { Frame, FramePanel } from "@/components/reui/frame";
+import { SaveFileDialog } from "@/components/save-file-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Empty,
   EmptyContent,
@@ -43,269 +43,270 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty"
-import { Spinner } from "@/components/ui/spinner"
-import { ApiError } from "@/lib/api"
-import { projectApi } from "@/lib/project-api"
+} from "@/components/ui/empty";
+import { Spinner } from "@/components/ui/spinner";
+import { ApiError } from "@/lib/api";
+import { projectApi } from "@/lib/project-api";
 import type {
   CompileEngine,
   CompileFailure,
   FileMeta,
   Project,
-} from "@/lib/project-types"
-import { isEditablePath } from "@/lib/project-types"
-import { clearSession } from "@/lib/session"
-import type { User } from "@/lib/auth-types"
+} from "@/lib/project-types";
+import { isEditablePath } from "@/lib/project-types";
+import { clearSession } from "@/lib/session";
+import type { User } from "@/lib/auth-types";
 
-const ENGINES: CompileEngine[] = ["pdflatex", "xelatex", "lualatex"]
+const ENGINES: CompileEngine[] = ["pdflatex", "xelatex", "lualatex"];
 const ENGINE_LABELS: Record<CompileEngine, string> = {
   pdflatex: "pdfLaTeX",
   xelatex: "XeLaTeX",
   lualatex: "LuaLaTeX",
-}
+};
 
 export function ProjectEditorPage({ user }: { user: User }) {
-  const { projectId = "" } = useParams()
-  const navigate = useNavigate()
+  const { projectId = "" } = useParams();
+  const navigate = useNavigate();
 
-  const [project, setProject] = useState<Project | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
-  const [files, setFiles] = useState<FileMeta[]>([])
-  const [activePath, setActivePath] = useState<string | null>(null)
-  const [content, setContent] = useState("")
-  const [original, setOriginal] = useState("")
-  const [loadingFile, setLoadingFile] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const [project, setProject] = useState<Project | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [files, setFiles] = useState<FileMeta[]>([]);
+  const [activePath, setActivePath] = useState<string | null>(null);
+  const [content, setContent] = useState("");
+  const [original, setOriginal] = useState("");
+  const [loadingFile, setLoadingFile] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const [engine, setEngine] = useState<CompileEngine>("pdflatex")
-  const [compiling, setCompiling] = useState(false)
-  const [downloadingPdf, setDownloadingPdf] = useState(false)
-  const [pdfVersion, setPdfVersion] = useState(0)
+  const [engine, setEngine] = useState<CompileEngine>("pdflatex");
+  const [compiling, setCompiling] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [pdfVersion, setPdfVersion] = useState(0);
   const [compileFailure, setCompileFailure] = useState<CompileFailure | null>(
     null,
-  )
-  const [showErrorPanel, setShowErrorPanel] = useState(false)
-  const [pendingLine, setPendingLine] = useState<number | null>(null)
+  );
+  const [showErrorPanel, setShowErrorPanel] = useState(false);
+  const [pendingLine, setPendingLine] = useState<number | null>(null);
 
-  const [newFileOpen, setNewFileOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [aiOpen, setAiOpen] = useState(false)
-  const [agentOpen, setAgentOpen] = useState(false)
+  const [newFileOpen, setNewFileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [agentOpen, setAgentOpen] = useState(false);
 
-  const dirty = content !== original
+  const dirty = content !== original;
 
   const handleError = useCallback(
     (err: unknown, fallback: string) => {
       if (err instanceof ApiError) {
         if (err.status === 401) {
-          clearSession()
-          navigate("/login", { replace: true })
-          return
+          clearSession();
+          navigate("/login", { replace: true });
+          return;
         }
-        toast.error(fallback, { description: err.message })
-        return
+        toast.error(fallback, { description: err.message });
+        return;
       }
-      toast.error(fallback)
+      toast.error(fallback);
     },
     [navigate],
-  )
+  );
 
   /** Muat ulang metadata + file setelah AI menerapkan/membatalkan edit. */
   const reloadAfterAi = useCallback(async () => {
     try {
-      const res = await projectApi.get(projectId)
-      setProject(res.project)
-      setFiles(res.files)
+      const res = await projectApi.get(projectId);
+      setProject(res.project);
+      setFiles(res.files);
 
       const stillThere = activePath
         ? res.files.some((f) => f.path === activePath)
-        : false
+        : false;
       if (activePath && stillThere && isEditablePath(activePath)) {
-        const file = await projectApi.getFile(projectId, activePath)
-        setContent(file.file.content)
-        setOriginal(file.file.content)
+        const file = await projectApi.getFile(projectId, activePath);
+        setContent(file.file.content);
+        setOriginal(file.file.content);
       } else if (activePath && !stillThere) {
         const next =
           res.files.find((f) => f.path === res.project.main_file)?.path ??
           res.files[0]?.path ??
-          null
-        setActivePath(next)
+          null;
+        setActivePath(next);
       }
     } catch (err) {
-      handleError(err, "File AI berubah, tetapi project gagal dimuat ulang")
+      handleError(err, "File AI berubah, tetapi project gagal dimuat ulang");
     }
-  }, [projectId, activePath, handleError])
+  }, [projectId, activePath, handleError]);
 
   /** Setelah agent menerapkan bab: muat ulang file + segarkan PDF. */
   const reloadAfterAgent = useCallback(async () => {
-    await reloadAfterAi()
-    setPdfVersion((v) => v + 1)
-  }, [reloadAfterAi])
+    await reloadAfterAi();
+    setPdfVersion((v) => v + 1);
+  }, [reloadAfterAi]);
 
   // Muat detail project + daftar file
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
     projectApi
       .get(projectId)
       .then((res) => {
-        if (cancelled) return
-        setProject(res.project)
-        setFiles(res.files)
+        if (cancelled) return;
+        setProject(res.project);
+        setFiles(res.files);
         const first =
           res.files.find((f) => f.path === res.project.main_file)?.path ??
           res.files[0]?.path ??
-          null
-        setActivePath(first)
+          null;
+        setActivePath(first);
       })
       .catch((err) => {
-        if (cancelled) return
-        handleError(err, "Gagal memuat project")
+        if (cancelled) return;
+        handleError(err, "Gagal memuat project");
         setLoadError(
           err instanceof ApiError
             ? err.message
             : "Project tidak dapat dimuat. Coba lagi.",
-        )
-      })
+        );
+      });
     return () => {
-      cancelled = true
-    }
-  }, [projectId, handleError])
+      cancelled = true;
+    };
+  }, [projectId, handleError]);
 
   // Muat isi file aktif (hanya file teks; biner lewat /raw)
   useEffect(() => {
-    if (!activePath) return
+    if (!activePath) return;
     if (!isEditablePath(activePath)) {
-      setContent("")
-      setOriginal("")
-      setLoadingFile(false)
-      return
+      setContent("");
+      setOriginal("");
+      setLoadingFile(false);
+      return;
     }
-    let cancelled = false
-    setLoadingFile(true)
+    let cancelled = false;
+    setLoadingFile(true);
     projectApi
       .getFile(projectId, activePath)
       .then((res) => {
-        if (cancelled) return
-        setContent(res.file.content)
-        setOriginal(res.file.content)
+        if (cancelled) return;
+        setContent(res.file.content);
+        setOriginal(res.file.content);
       })
       .catch((err) => {
-        if (!cancelled) handleError(err, "Gagal memuat file")
+        if (!cancelled) handleError(err, "Gagal memuat file");
       })
       .finally(() => {
-        if (!cancelled) setLoadingFile(false)
-      })
+        if (!cancelled) setLoadingFile(false);
+      });
     return () => {
-      cancelled = true
-    }
-  }, [projectId, activePath, handleError])
+      cancelled = true;
+    };
+  }, [projectId, activePath, handleError]);
 
   async function handleSave() {
-    if (!activePath || !dirty) return
-    setSaving(true)
+    if (!activePath || !dirty) return;
+    setSaving(true);
     try {
-      await projectApi.putFile(projectId, activePath, content)
-      setOriginal(content)
+      await projectApi.putFile(projectId, activePath, content);
+      setOriginal(content);
       setFiles((prev) =>
         prev.map((f) =>
           f.path === activePath
             ? { ...f, size_bytes: new Blob([content]).size }
             : f,
         ),
-      )
-      toast.success("File disimpan")
+      );
+      toast.success("File disimpan");
     } catch (err) {
-      handleError(err, "Gagal menyimpan file")
+      handleError(err, "Gagal menyimpan file");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
   async function handleCompile() {
-    if (compiling) return
-    setCompiling(true)
-    setCompileFailure(null)
+    if (compiling) return;
+    setCompiling(true);
+    setCompileFailure(null);
     try {
-      const res = await projectApi.compile(projectId, engine)
-      setPdfVersion((v) => v + 1)
+      const res = await projectApi.compile(projectId, engine);
+      setPdfVersion((v) => v + 1);
       toast.success("Kompilasi berhasil", {
         description: `${res.runs} pass · ${(res.duration_ms / 1000).toFixed(1)}s`,
-      })
-      setShowErrorPanel(false)
+      });
+      setShowErrorPanel(false);
     } catch (err) {
       if (err instanceof ApiError) {
         // Server sudah mem-parse log; tinggal tampilkan.
         if (err.compile) {
-          const failure = err.compile as CompileFailure
-          setCompileFailure(failure)
-          setShowErrorPanel(true)
+          const failure = err.compile as CompileFailure;
+          setCompileFailure(failure);
+          setShowErrorPanel(true);
           toast.error(
             failure.status === "timeout"
               ? "Kompilasi melebihi batas waktu"
               : "Kompilasi gagal",
             { description: failure.message },
-          )
+          );
           // Langsung buka file yang error.
           if (failure.file) {
-            const target = failure.file.replace(/^\.\//, "")
-            const exists = files.some((f) => f.path === target)
-            if (exists && target !== activePath) setActivePath(target)
+            const target = failure.file.replace(/^\.\//, "");
+            const exists = files.some((f) => f.path === target);
+            if (exists && target !== activePath) setActivePath(target);
           }
-          return
+          return;
         }
-        handleError(err, "Kompilasi gagal")
-        return
+        handleError(err, "Kompilasi gagal");
+        return;
       }
-      toast.error("Kompilasi gagal")
+      toast.error("Kompilasi gagal");
     } finally {
-      setCompiling(false)
+      setCompiling(false);
     }
   }
 
   /** Dipanggil saat user mengklik satu error di panel. */
   function handleOpenLocation(file: string, line: number) {
-    const target = file.replace(/^\.\//, "")
+    const target = file.replace(/^\.\//, "");
     if (target !== activePath && files.some((f) => f.path === target)) {
-      setActivePath(target)
+      setActivePath(target);
     }
-    setPendingLine(line)
+    setPendingLine(line);
   }
 
   async function handleDownloadPdf() {
-    if (!project) return
-    setDownloadingPdf(true)
+    if (!project) return;
+    setDownloadingPdf(true);
     try {
-      const safe = project.name.replace(/[^\w\-. ]+/g, "_").trim() || "document"
-      await projectApi.downloadPdf(projectId, `${safe}.pdf`)
+      const safe =
+        project.name.replace(/[^\w\-. ]+/g, "_").trim() || "document";
+      await projectApi.downloadPdf(projectId, `${safe}.pdf`);
     } catch (err) {
-      handleError(err, "Gagal mengunduh PDF")
+      handleError(err, "Gagal mengunduh PDF");
     } finally {
-      setDownloadingPdf(false)
+      setDownloadingPdf(false);
     }
   }
 
   // Ctrl/Cmd+S untuk simpan, Ctrl/Cmd+Enter untuk compile
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      const mod = e.metaKey || e.ctrlKey
-      if (!mod) return
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
       if (e.key.toLowerCase() === "s") {
-        e.preventDefault()
-        void handleSave()
+        e.preventDefault();
+        void handleSave();
       } else if (e.key === "Enter") {
-        e.preventDefault()
-        void handleCompile()
+        e.preventDefault();
+        void handleCompile();
       }
     }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  })
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
 
   const fetchPdf = useCallback(
     (id: string, signal?: AbortSignal) =>
       projectApi.fetchPdfObjectUrl(id, signal),
     [],
-  )
+  );
 
   if (!project) {
     return (
@@ -342,10 +343,10 @@ export function ProjectEditorPage({ user }: { user: User }) {
           </Frame>
         </main>
       </div>
-    )
+    );
   }
 
-  const editable = activePath ? isEditablePath(activePath) : false
+  const editable = activePath ? isEditablePath(activePath) : false;
 
   return (
     <div className="bg-muted/30 flex h-svh flex-col overflow-hidden">
@@ -412,27 +413,27 @@ export function ProjectEditorPage({ user }: { user: User }) {
                     <span className="hidden sm:inline">Simpan</span>
                   </Button>
 
-          <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setAgentOpen(true)}
-          aria-label="Buka buku ajar"
-          title="Buku Ajar"
-          >
-          <BookOpen />
-          <span className="hidden sm:inline">Buku</span>
-          </Button>
+                  {/*<Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAgentOpen(true)}
+                    aria-label="Buka buku ajar"
+                    title="Buku Ajar"
+                  >
+                    <BookOpen />
+                    <span className="hidden sm:inline">Buku</span>
+                  </Button>*/}
 
-          <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setAiOpen(true)}
-          aria-label="Buka asisten AI"
-          title="Asisten AI"
-          >
-          <Sparkles />
-          <span className="hidden sm:inline">AI</span>
-          </Button>
+                  {/*<Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAiOpen(true)}
+                    aria-label="Buka asisten AI"
+                    title="Asisten AI"
+                  >
+                    <Sparkles />
+                    <span className="hidden sm:inline">AI</span>
+                  </Button>*/}
 
                   <Button
                     size="sm"
@@ -501,17 +502,17 @@ export function ProjectEditorPage({ user }: { user: User }) {
                   mainFile={project.main_file}
                   onDownload={(p) => {
                     projectApi.downloadRaw(projectId, p).catch((err) => {
-                      handleError(err, "Gagal mengunduh file")
-                    })
+                      handleError(err, "Gagal mengunduh file");
+                    });
                   }}
                   onSelect={(p) => {
                     if (dirty) {
                       const ok = window.confirm(
                         "Ada perubahan belum disimpan. Pindah file tetap dilakukan?",
-                      )
-                      if (!ok) return
+                      );
+                      if (!ok) return;
                     }
-                    setActivePath(p)
+                    setActivePath(p);
                   }}
                 />
               </ScrollArea>
@@ -558,8 +559,8 @@ export function ProjectEditorPage({ user }: { user: User }) {
                     path={activePath}
                     onDownload={(p) => {
                       projectApi.downloadRaw(projectId, p).catch((err) => {
-                        handleError(err, "Gagal mengunduh file")
-                      })
+                        handleError(err, "Gagal mengunduh file");
+                      });
                     }}
                   />
                 ) : activePath ? (
@@ -623,11 +624,11 @@ export function ProjectEditorPage({ user }: { user: User }) {
         onOpenChange={setNewFileOpen}
         existingPaths={files.map((f) => f.path)}
         onSave={async (path, initialContent) => {
-          await projectApi.putFile(projectId, path, initialContent)
-          const res = await projectApi.listFiles(projectId)
-          setFiles(res.files)
-          setActivePath(path)
-          toast.success("File dibuat")
+          await projectApi.putFile(projectId, path, initialContent);
+          const res = await projectApi.listFiles(projectId);
+          setFiles(res.files);
+          setActivePath(path);
+          toast.success("File dibuat");
         }}
       />
 
@@ -639,5 +640,5 @@ export function ProjectEditorPage({ user }: { user: User }) {
         onSaved={(p) => setProject(p)}
       />
     </div>
-  )
+  );
 }

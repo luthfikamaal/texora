@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react"
 import { formatDistanceToNow } from "date-fns"
 import { id as localeId } from "date-fns/locale"
-import { FileText, MoreHorizontal, Plus, Trash2, Upload } from "lucide-react"
+import { Eye, FileText, MoreHorizontal, Plus, Trash2, Upload } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
 import { AppHeader } from "@/components/app-header"
 import { CreateProjectDialog } from "@/components/create-project-dialog"
 import { ImportProjectDialog } from "@/components/import-project-dialog"
-import { Frame, FramePanel } from "@/components/reui/frame"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,7 +34,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
-import { Skeleton } from "@/components/ui/skeleton"
 import { ApiError } from "@/lib/api"
 import { projectApi } from "@/lib/project-api"
 import type { Project } from "@/lib/project-types"
@@ -70,7 +68,7 @@ function ProjectsIllustration() {
           <div className="bg-muted-foreground/10 h-2 w-3/4 rounded" />
         </div>
       </div>
-      <div className="bg-background border-border absolute inset-x-0 bottom-12 flex h-14 items-center gap-3 rounded-lg border px-3.5 shadow-sm">
+      <div className="bg-background border-border absolute inset-x-0 bottom-12 flex h-14 items-center gap-3 rounded-lg border px-3.5">
         <div className="bg-muted size-7 shrink-0 rounded" />
         <div className="flex flex-1 flex-col gap-1.5">
           <div className="bg-muted h-2.5 w-full rounded" />
@@ -78,6 +76,22 @@ function ProjectsIllustration() {
         </div>
       </div>
       <div className="from-background/0 to-background pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-linear-to-b" />
+    </div>
+  )
+}
+
+function ProjectsSkeleton() {
+  return (
+    <div className="divide-y overflow-hidden rounded-xl border">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-4 px-4 py-3">
+          <div className="bg-muted size-9 shrink-0 animate-pulse rounded-md" />
+          <div className="flex flex-1 flex-col gap-2">
+            <div className="bg-muted h-3 w-1/3 animate-pulse rounded" />
+            <div className="bg-muted h-3 w-2/3 animate-pulse rounded" />
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -137,15 +151,13 @@ export function ProjectsPage({ user }: { user: User }) {
     <div className="min-h-svh">
       <AppHeader user={user} />
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:py-10">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:py-14">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <h1 className="text-2xl font-semibold tracking-tight">Project</h1>
               {projects !== null && (
-                <Badge variant="secondary" className="tabular-nums">
-                  {projects.length}
-                </Badge>
+                <Badge variant="secondary">{projects.length}</Badge>
               )}
             </div>
             <p className="text-muted-foreground text-sm">
@@ -165,11 +177,7 @@ export function ProjectsPage({ user }: { user: User }) {
         </div>
 
         {projects === null ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-32 rounded-xl" />
-            ))}
-          </div>
+          <ProjectsSkeleton />
         ) : projects.length === 0 ? (
           <Empty className="py-12">
             <EmptyHeader>
@@ -196,67 +204,67 @@ export function ProjectsPage({ user }: { user: User }) {
             </EmptyContent>
           </Empty>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="divide-y overflow-hidden rounded-xl border">
             {projects.map((p) => (
-              <Frame
+              <li
                 key={p.id}
-                spacing="xs"
-                className="group shadow-xs transition-colors hover:border-primary/30"
+                className="hover:bg-muted/50 relative flex items-center gap-4 px-4 py-3 transition-colors"
               >
-                <FramePanel className="flex h-full flex-col p-0">
-                  <div className="flex flex-1 flex-col gap-2 p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <Link
-                        to={`/projects/${p.id}`}
-                        className="flex min-w-0 items-start gap-2.5"
+                <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-md">
+                  <FileText className="size-4" />
+                </span>
+
+                <div className="min-w-0 flex-1">
+                  <Link
+                    to={`/projects/${p.id}`}
+                    className="block truncate text-sm font-medium after:absolute after:inset-0"
+                  >
+                    {p.name}
+                  </Link>
+                  <p className="text-muted-foreground truncate text-sm">
+                    {p.description || "Tanpa deskripsi"}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs sm:hidden">
+                    {p.file_count} file · {relative(p.files_updated_at)}
+                  </p>
+                </div>
+
+                <div className="text-muted-foreground hidden shrink-0 flex-col items-end gap-0.5 text-xs sm:flex">
+                  <span>{p.file_count} file</span>
+                  <span>{relative(p.files_updated_at)}</span>
+                </div>
+
+                <div className="relative z-10 shrink-0">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Aksi project"
                       >
-                        <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-md border transition-colors group-hover:text-foreground">
-                          <FileText className="size-4" />
-                        </span>
-                        <span className="line-clamp-2 pt-1 text-sm font-semibold group-hover:underline">
-                          {p.name}
-                        </span>
-                      </Link>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label="Aksi project"
-                          >
-                            <MoreHorizontal />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link to={`/projects/${p.id}`}>Buka</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            variant="destructive"
-                            onSelect={() => setPendingDelete(p)}
-                          >
-                            <Trash2 />
-                            Hapus
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    <p className="text-muted-foreground line-clamp-2 min-h-8 text-sm">
-                      {p.description || "Tanpa deskripsi"}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 border-t bg-muted/20 px-3 py-2">
-                    <Badge variant="secondary" className="font-normal">
-                      {p.file_count} file
-                    </Badge>
-                    <span className="text-muted-foreground text-xs">
-                      {relative(p.files_updated_at)}
-                    </span>
-                  </div>
-                </FramePanel>
-              </Frame>
+                        <MoreHorizontal />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link to={`/projects/${p.id}`}>
+                        <Eye />
+                          Buka
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onSelect={() => setPendingDelete(p)}
+                      >
+                        <Trash2 />
+                        Hapus
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </main>
 
