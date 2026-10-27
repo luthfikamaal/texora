@@ -26,13 +26,6 @@ import { Frame, FramePanel } from "@/components/reui/frame";
 import { SaveFileDialog } from "@/components/save-file-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Empty,
@@ -46,7 +39,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { ApiError } from "@/lib/api";
 import { projectApi } from "@/lib/project-api";
 import type {
-  CompileEngine,
   CompileFailure,
   FileMeta,
   Project,
@@ -55,12 +47,7 @@ import { isEditablePath } from "@/lib/project-types";
 import { clearSession } from "@/lib/session";
 import type { User } from "@/lib/auth-types";
 
-const ENGINES: CompileEngine[] = ["pdflatex", "xelatex", "lualatex"];
-const ENGINE_LABELS: Record<CompileEngine, string> = {
-  pdflatex: "pdfLaTeX",
-  xelatex: "XeLaTeX",
-  lualatex: "LuaLaTeX",
-};
+const COMPILER = "pdflatex" as const;
 
 export function ProjectEditorPage({ user }: { user: User }) {
   const { projectId = "" } = useParams();
@@ -75,7 +62,6 @@ export function ProjectEditorPage({ user }: { user: User }) {
   const [loadingFile, setLoadingFile] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [engine, setEngine] = useState<CompileEngine>("pdflatex");
   const [compiling, setCompiling] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [pdfVersion, setPdfVersion] = useState(0);
@@ -224,10 +210,10 @@ export function ProjectEditorPage({ user }: { user: User }) {
     setCompiling(true);
     setCompileFailure(null);
     try {
-      const res = await projectApi.compile(projectId, engine);
+      const res = await projectApi.compile(projectId, COMPILER);
       setPdfVersion((v) => v + 1);
       toast.success("Kompilasi berhasil", {
-        description: `${res.runs} pass · ${(res.duration_ms / 1000).toFixed(1)}s`,
+        description: `pdfLaTeX · ${res.runs} pass · ${(res.duration_ms / 1000).toFixed(1)}s`,
       });
       setShowErrorPanel(false);
     } catch (err) {
@@ -379,24 +365,14 @@ export function ProjectEditorPage({ user }: { user: User }) {
               </div>
 
               <div className="flex w-full items-center justify-between gap-2 sm:ml-auto sm:w-auto sm:justify-end">
-                <Select
-                  value={engine}
-                  onValueChange={(v) => setEngine(v as CompileEngine)}
+                <Badge
+                  variant="outline"
+                  className="h-8 gap-1.5 px-2.5 text-xs font-medium"
+                  title="Mesin kompilasi"
                 >
-                  <SelectTrigger
-                    aria-label="Mesin kompilasi"
-                    className="h-8 w-[7.5rem]"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ENGINES.map((e) => (
-                      <SelectItem key={e} value={e}>
-                        {ENGINE_LABELS[e]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <FileCode2 className="size-3.5" />
+                  pdfLaTeX
+                </Badge>
 
                 <div className="flex items-center gap-1.5">
                   <Button
@@ -437,8 +413,8 @@ export function ProjectEditorPage({ user }: { user: User }) {
                     size="sm"
                     onClick={handleCompile}
                     disabled={compiling}
-                    aria-label="Kompilasi"
-                    title="Kompilasi (Ctrl+Enter)"
+                    aria-label="Kompilasi dengan pdfLaTeX"
+                    title="Kompilasi dengan pdfLaTeX (Ctrl+Enter)"
                   >
                     {compiling ? <Spinner /> : <Play />}
                     <span className="hidden sm:inline">Kompilasi</span>

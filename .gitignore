@@ -30,3 +30,6 @@ dist-ssr
 
 # JCE context index runtime state
 .opencode-jce/context/
+
+# Browser test artifacts
+.playwright-mcp/

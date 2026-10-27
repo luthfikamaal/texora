@@ -2260,5 +2260,958 @@
       "command": "npm run build 2>&1 | tail -8"
     },
     "at": "2026-10-20T12:52:46.246Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "general",
+    "metadata": {
+      "intent": "general",
+      "selectedSkills": [
+        "human-ui-design",
+        "ui-pattern-library",
+        "visual-qa-rubric",
+        "software-engineering"
+      ],
+      "suppressedSkills": [],
+      "confidence": 32
+    },
+    "at": "2026-10-27T06:46:33.953Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "human-ui-design",
+    "metadata": {
+      "skill": "human-ui-design",
+      "intent": "general"
+    },
+    "at": "2026-10-27T06:46:33.955Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "ui-pattern-library",
+    "metadata": {
+      "skill": "ui-pattern-library",
+      "intent": "general"
+    },
+    "at": "2026-10-27T06:46:33.957Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "visual-qa-rubric",
+    "metadata": {
+      "skill": "visual-qa-rubric",
+      "intent": "general"
+    },
+    "at": "2026-10-27T06:46:33.959Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "software-engineering",
+    "metadata": {
+      "skill": "software-engineering",
+      "intent": "general"
+    },
+    "at": "2026-10-27T06:46:33.961Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "auto_activation",
+    "metadata": {
+      "activate": true,
+      "confidence": 0.85,
+      "reason": "direct action instruction",
+      "signals": [
+        "action_verb"
+      ]
+    },
+    "at": "2026-10-27T06:46:33.964Z"
+  },
+  {
+    "kind": "skill_final_used",
+    "name": "human-ui-design",
+    "metadata": {
+      "skill": "human-ui-design",
+      "source": "system_injection"
+    },
+    "at": "2026-10-27T06:46:34.227Z"
+  },
+  {
+    "kind": "skill_final_used",
+    "name": "ui-pattern-library",
+    "metadata": {
+      "skill": "ui-pattern-library",
+      "source": "system_injection"
+    },
+    "at": "2026-10-27T06:46:34.228Z"
+  },
+  {
+    "kind": "skill_final_used",
+    "name": "visual-qa-rubric",
+    "metadata": {
+      "skill": "visual-qa-rubric",
+      "source": "system_injection"
+    },
+    "at": "2026-10-27T06:46:34.230Z"
+  },
+  {
+    "kind": "skill_final_used",
+    "name": "software-engineering",
+    "metadata": {
+      "skill": "software-engineering",
+      "source": "system_injection"
+    },
+    "at": "2026-10-27T06:46:34.232Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "ls public && cat vite.config.ts && cat components.json",
+    "metadata": {
+      "command": "ls public && cat vite.config.ts && cat components.json",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T06:47:09.122Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "ls public && cat vite.config.ts && cat components.json",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "ls public && cat vite.config.ts && cat components.json"
+    },
+    "at": "2026-10-27T06:47:09.124Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "for f in navbar-01 stats-01 faq-01 cta-01 footer-01; do printf \"\\n=== %s ===\\n\" \"$f\"; curl -sL \"https://shadcnui-blocks.com/r/$f.json\" | node -e \"let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const j=JSON.parse(d);console.log(j.title||j.name);console.log((j.files?.[0]?.content||'').slice(0,3500))}catch(e){console.log('ERR',d.slice(0,120))}})\"; done",
+    "metadata": {
+      "command": "for f in navbar-01 stats-01 faq-01 cta-01 footer-01; do printf \"\\n=== %s ===\\n\" \"$f\"; curl -sL \"https://shadcnui-blocks.com/r/$f.json\" | node -e \"let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const j=JSON.parse(d);console.log(j.title||j.name);console.log((j.files?.[0]?.content||'').slice(0,3500))}catch(e){console.log('ERR',d.slice(0,120))}})\"; done",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T06:48:47.588Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "for f in navbar-01 stats-01 faq-01 cta-01 footer-01; do printf \"\\n=== %s ===\\n\" \"$f\"; curl -sL \"https://shadcnui-blocks.com/r/$f.json\" | node -e \"let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const j=JSON.parse(d);console.log(j.title||j.name);console.log((j.files?.[0]?.content||'').slice(0,3500))}catch(e){console.log('ERR',d.slice(0,120))}})\"; done",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "for f in navbar-01 stats-01 faq-01 cta-01 footer-01; do printf \"\\n=== %s ===\\n\" \"$f\"; curl -sL \"https://shadcnui-blocks.com/r/$f.json\" | node -e \"let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const j=JSON.parse(d);console.log(j.title||j.name);console.log((j.files?.[0]?.content||'').slice(0,3500))}catch(e){console.log('ERR',d.slice(0,120))}})\"; done"
+    },
+    "at": "2026-10-27T06:48:47.590Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "for f in hero-02 hero-03 hero-04 hero-05 hero-06 hero-07 hero-08; do printf \"\\n=== %s ===\\n\" \"$f\"; curl -sL \"https://shadcnui-blocks.com/r/$f.json\" | node -e \"let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const j=JSON.parse(d);console.log(j.title);console.log((j.files?.[0]?.content||'').slice(0,1800))}catch(e){console.log('ERR')}})\"; done",
+    "metadata": {
+      "command": "for f in hero-02 hero-03 hero-04 hero-05 hero-06 hero-07 hero-08; do printf \"\\n=== %s ===\\n\" \"$f\"; curl -sL \"https://shadcnui-blocks.com/r/$f.json\" | node -e \"let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const j=JSON.parse(d);console.log(j.title);console.log((j.files?.[0]?.content||'').slice(0,1800))}catch(e){console.log('ERR')}})\"; done",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T06:48:59.087Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "for f in hero-02 hero-03 hero-04 hero-05 hero-06 hero-07 hero-08; do printf \"\\n=== %s ===\\n\" \"$f\"; curl -sL \"https://shadcnui-blocks.com/r/$f.json\" | node -e \"let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const j=JSON.parse(d);console.log(j.title);console.log((j.files?.[0]?.content||'').slice(0,1800))}catch(e){console.log('ERR')}})\"; done",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "for f in hero-02 hero-03 hero-04 hero-05 hero-06 hero-07 hero-08; do printf \"\\n=== %s ===\\n\" \"$f\"; curl -sL \"https://shadcnui-blocks.com/r/$f.json\" | node -e \"let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{try{const j=JSON.parse(d);console.log(j.title);console.log((j.files?.[0]?.content||'').slice(0,1800))}catch(e){console.log('ERR')}})\"; done"
+    },
+    "at": "2026-10-27T06:48:59.088Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run lint",
+    "metadata": {
+      "command": "npm run lint",
+      "status": "fail"
+    },
+    "at": "2026-10-27T06:52:26.664Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run lint",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "npm run lint"
+    },
+    "at": "2026-10-27T06:52:26.666Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npx tsc -b --pretty false",
+    "metadata": {
+      "command": "npx tsc -b --pretty false",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T06:52:35.647Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npx tsc -b --pretty false",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "npx tsc -b --pretty false"
+    },
+    "at": "2026-10-27T06:52:35.649Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run build",
+    "metadata": {
+      "command": "npm run build",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T06:52:52.553Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run build",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "npm run build"
+    },
+    "at": "2026-10-27T06:52:52.555Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run lint",
+    "metadata": {
+      "command": "npm run lint",
+      "status": "fail"
+    },
+    "at": "2026-10-27T07:10:31.083Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run lint",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "npm run lint"
+    },
+    "at": "2026-10-27T07:10:31.088Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npx tsc -b --pretty false",
+    "metadata": {
+      "command": "npx tsc -b --pretty false",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:10:42.015Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npx tsc -b --pretty false",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "npx tsc -b --pretty false"
+    },
+    "at": "2026-10-27T07:10:42.017Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run build",
+    "metadata": {
+      "command": "npm run build",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:11:00.340Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run build",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "npm run build"
+    },
+    "at": "2026-10-27T07:11:00.341Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "sed -n '1,70p' src/pages/landing.tsx",
+    "metadata": {
+      "command": "sed -n '1,70p' src/pages/landing.tsx",
+      "status": "pass"
+    },
+    "at": "2026-10-27T07:11:46.182Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "sed -n '1,70p' src/pages/landing.tsx",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": true,
+      "command": "sed -n '1,70p' src/pages/landing.tsx"
+    },
+    "at": "2026-10-27T07:11:46.185Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "cat package.json",
+    "metadata": {
+      "command": "cat package.json",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:12:08.082Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "cat package.json",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "cat package.json"
+    },
+    "at": "2026-10-27T07:12:08.084Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "grep -n \"characteristic\\|s\\.\" src/pages/landing.tsx | head -20",
+    "metadata": {
+      "command": "grep -n \"characteristic\\|s\\.\" src/pages/landing.tsx | head -20",
+      "status": "fail"
+    },
+    "at": "2026-10-27T07:14:07.039Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "grep -n \"characteristic\\|s\\.\" src/pages/landing.tsx | head -20",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "grep -n \"characteristic\\|s\\.\" src/pages/landing.tsx | head -20"
+    },
+    "at": "2026-10-27T07:14:07.041Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run build",
+    "metadata": {
+      "command": "npm run build",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:15:42.226Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run build",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "npm run build"
+    },
+    "at": "2026-10-27T07:15:42.229Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "cat src/components/require-auth.tsx; sed -n '20,60p' src/pages/login.tsx; grep -n \"to=\\\"/login\\\"\\|href=\\\"#\" src/pages/landing.tsx",
+    "metadata": {
+      "command": "cat src/components/require-auth.tsx; sed -n '20,60p' src/pages/login.tsx; grep -n \"to=\\\"/login\\\"\\|href=\\\"#\" src/pages/landing.tsx",
+      "status": "pass"
+    },
+    "at": "2026-10-27T07:17:35.164Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "cat src/components/require-auth.tsx; sed -n '20,60p' src/pages/login.tsx; grep -n \"to=\\\"/login\\\"\\|href=\\\"#\" src/pages/landing.tsx",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": true,
+      "command": "cat src/components/require-auth.tsx; sed -n '20,60p' src/pages/login.tsx; grep -n \"to=\\\"/login\\\"\\|href=\\\"#\" src/pages/landing.tsx"
+    },
+    "at": "2026-10-27T07:17:35.167Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npx --no-install prettier --version 2>&1 || true; npx --no-install prettier --check src/pages/landing.tsx 2>&1 | tail -5 || true",
+    "metadata": {
+      "command": "npx --no-install prettier --version 2>&1 || true; npx --no-install prettier --check src/pages/landing.tsx 2>&1 | tail -5 || true",
+      "status": "fail"
+    },
+    "at": "2026-10-27T07:18:03.066Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npx --no-install prettier --version 2>&1 || true; npx --no-install prettier --check src/pages/landing.tsx 2>&1 | tail -5 || true",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "npx --no-install prettier --version 2>&1 || true; npx --no-install prettier --check src/pages/landing.tsx 2>&1 | tail -5 || true"
+    },
+    "at": "2026-10-27T07:18:03.069Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npx tsc -b --pretty false && npm run build",
+    "metadata": {
+      "command": "npx tsc -b --pretty false && npm run build",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:25:44.462Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npx tsc -b --pretty false && npm run build",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "npx tsc -b --pretty false && npm run build"
+    },
+    "at": "2026-10-27T07:25:44.466Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run lint 2>&1 | tail -8",
+    "metadata": {
+      "command": "npm run lint 2>&1 | tail -8",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:26:37.131Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run lint 2>&1 | tail -8",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "npm run lint 2>&1 | tail -8"
+    },
+    "at": "2026-10-27T07:26:37.133Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npx --yes prettier@3.9.10 --check --no-semi --print-width 100 src/pages/landing.tsx src/App.tsx src/components/ui/accordion.tsx",
+    "metadata": {
+      "command": "npx --yes prettier@3.9.10 --check --no-semi --print-width 100 src/pages/landing.tsx src/App.tsx src/components/ui/accordion.tsx",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:26:40.623Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npx --yes prettier@3.9.10 --check --no-semi --print-width 100 src/pages/landing.tsx src/App.tsx src/components/ui/accordion.tsx",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "npx --yes prettier@3.9.10 --check --no-semi --print-width 100 src/pages/landing.tsx src/App.tsx src/components/ui/accordion.tsx"
+    },
+    "at": "2026-10-27T07:26:40.626Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npx tsc -b --pretty false && npm run build",
+    "metadata": {
+      "command": "npx tsc -b --pretty false && npm run build",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:27:00.996Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npx tsc -b --pretty false && npm run build",
+    "metadata": {
+      "skill": "human-ui-design",
+      "passed": false,
+      "command": "npx tsc -b --pretty false && npm run build"
+    },
+    "at": "2026-10-27T07:27:00.998Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "bugfix",
+    "metadata": {
+      "intent": "bugfix",
+      "selectedSkills": [
+        "software-engineering",
+        "react",
+        "angular",
+        "verification-discipline"
+      ],
+      "suppressedSkills": [
+        "ui-pattern-library",
+        "auth-identity",
+        "typescript"
+      ],
+      "confidence": 71
+    },
+    "at": "2026-10-27T07:29:16.488Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "software-engineering",
+    "metadata": {
+      "skill": "software-engineering",
+      "intent": "bugfix"
+    },
+    "at": "2026-10-27T07:29:16.490Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "react",
+    "metadata": {
+      "skill": "react",
+      "intent": "bugfix"
+    },
+    "at": "2026-10-27T07:29:16.493Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "angular",
+    "metadata": {
+      "skill": "angular",
+      "intent": "bugfix"
+    },
+    "at": "2026-10-27T07:29:16.495Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "verification-discipline",
+    "metadata": {
+      "skill": "verification-discipline",
+      "intent": "bugfix"
+    },
+    "at": "2026-10-27T07:29:16.497Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "auto_activation",
+    "metadata": {
+      "activate": false,
+      "confidence": 0.1,
+      "reason": "no concrete action verb",
+      "signals": []
+    },
+    "at": "2026-10-27T07:29:16.505Z"
+  },
+  {
+    "kind": "skill_final_used",
+    "name": "react",
+    "metadata": {
+      "skill": "react",
+      "source": "system_injection"
+    },
+    "at": "2026-10-27T07:29:17.948Z"
+  },
+  {
+    "kind": "skill_final_used",
+    "name": "angular",
+    "metadata": {
+      "skill": "angular",
+      "source": "system_injection"
+    },
+    "at": "2026-10-27T07:29:17.953Z"
+  },
+  {
+    "kind": "skill_final_used",
+    "name": "verification-discipline",
+    "metadata": {
+      "skill": "verification-discipline",
+      "source": "system_injection"
+    },
+    "at": "2026-10-27T07:29:17.955Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "grep -RIn \"CompileEngine\\|xelatex\\|lualatex\\|pdflatex\\|engine\" src --exclude-dir=node_modules | head -120",
+    "metadata": {
+      "command": "grep -RIn \"CompileEngine\\|xelatex\\|lualatex\\|pdflatex\\|engine\" src --exclude-dir=node_modules | head -120",
+      "status": "fail"
+    },
+    "at": "2026-10-27T07:29:33.945Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "grep -RIn \"CompileEngine\\|xelatex\\|lualatex\\|pdflatex\\|engine\" src --exclude-dir=node_modules | head -120",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "grep -RIn \"CompileEngine\\|xelatex\\|lualatex\\|pdflatex\\|engine\" src --exclude-dir=node_modules | head -120"
+    },
+    "at": "2026-10-27T07:29:33.946Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "sed -n '45,135p' src/pages/landing.tsx; sed -n '460,535p' src/pages/landing.tsx; sed -n '900,980p' src/pages/landing.tsx; sed -n '1080,1170p' src/pages/landing.tsx",
+    "metadata": {
+      "command": "sed -n '45,135p' src/pages/landing.tsx; sed -n '460,535p' src/pages/landing.tsx; sed -n '900,980p' src/pages/landing.tsx; sed -n '1080,1170p' src/pages/landing.tsx",
+      "status": "fail"
+    },
+    "at": "2026-10-27T07:29:50.706Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "sed -n '45,135p' src/pages/landing.tsx; sed -n '460,535p' src/pages/landing.tsx; sed -n '900,980p' src/pages/landing.tsx; sed -n '1080,1170p' src/pages/landing.tsx",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "sed -n '45,135p' src/pages/landing.tsx; sed -n '460,535p' src/pages/landing.tsx; sed -n '900,980p' src/pages/landing.tsx; sed -n '1080,1170p' src/pages/landing.tsx"
+    },
+    "at": "2026-10-27T07:29:50.709Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npx tsc -b --pretty false",
+    "metadata": {
+      "command": "npx tsc -b --pretty false",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:30:53.792Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npx tsc -b --pretty false",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "npx tsc -b --pretty false"
+    },
+    "at": "2026-10-27T07:30:53.797Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "cat index.html; grep -RIn \"XeLaTeX\\|LuaLaTeX\\|three engines\\|Three engines\\|three compile\\|Pick an engine\\|which engine\\|compilers\\|engines\" index.html src/pages/landing.tsx src/pages/project-editor.tsx README* 2>/dev/null | head -80",
+    "metadata": {
+      "command": "cat index.html; grep -RIn \"XeLaTeX\\|LuaLaTeX\\|three engines\\|Three engines\\|three compile\\|Pick an engine\\|which engine\\|compilers\\|engines\" index.html src/pages/landing.tsx src/pages/project-editor.tsx README* 2>/dev/null | head -80",
+      "status": "fail"
+    },
+    "at": "2026-10-27T07:31:16.442Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "cat index.html; grep -RIn \"XeLaTeX\\|LuaLaTeX\\|three engines\\|Three engines\\|three compile\\|Pick an engine\\|which engine\\|compilers\\|engines\" index.html src/pages/landing.tsx src/pages/project-editor.tsx README* 2>/dev/null | head -80",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "cat index.html; grep -RIn \"XeLaTeX\\|LuaLaTeX\\|three engines\\|Three engines\\|three compile\\|Pick an engine\\|which engine\\|compilers\\|engines\" index.html src/pages/landing.tsx src/pages/project-editor.tsx README* 2>/dev/null | head -80"
+    },
+    "at": "2026-10-27T07:31:16.446Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npx --yes prettier@3.9.10 --write --no-semi --print-width 100 src/pages/landing.tsx && npx --yes prettier@3.9.10 --check --no-semi --print-width 100 src/pages/landing.tsx",
+    "metadata": {
+      "command": "npx --yes prettier@3.9.10 --write --no-semi --print-width 100 src/pages/landing.tsx && npx --yes prettier@3.9.10 --check --no-semi --print-width 100 src/pages/landing.tsx",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:32:35.276Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npx --yes prettier@3.9.10 --write --no-semi --print-width 100 src/pages/landing.tsx && npx --yes prettier@3.9.10 --check --no-semi --print-width 100 src/pages/landing.tsx",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "npx --yes prettier@3.9.10 --write --no-semi --print-width 100 src/pages/landing.tsx && npx --yes prettier@3.9.10 --check --no-semi --print-width 100 src/pages/landing.tsx"
+    },
+    "at": "2026-10-27T07:32:35.278Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run lint 2>&1 | tail -5",
+    "metadata": {
+      "command": "npm run lint 2>&1 | tail -5",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:32:57.522Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run lint 2>&1 | tail -5",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "npm run lint 2>&1 | tail -5"
+    },
+    "at": "2026-10-27T07:32:57.526Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npm run build",
+    "metadata": {
+      "command": "npm run build",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:33:08.004Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npm run build",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "npm run build"
+    },
+    "at": "2026-10-27T07:33:08.008Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "sed -n '1,180p' src/components/pdf-preview.tsx",
+    "metadata": {
+      "command": "sed -n '1,180p' src/components/pdf-preview.tsx",
+      "status": "fail"
+    },
+    "at": "2026-10-27T07:34:26.261Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "sed -n '1,180p' src/components/pdf-preview.tsx",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "sed -n '1,180p' src/components/pdf-preview.tsx"
+    },
+    "at": "2026-10-27T07:34:26.264Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "git diff -- src/pages/project-editor.tsx src/pages/landing.tsx index.html .gitignore | sed -n '1,260p'",
+    "metadata": {
+      "command": "git diff -- src/pages/project-editor.tsx src/pages/landing.tsx index.html .gitignore | sed -n '1,260p'",
+      "status": "pass"
+    },
+    "at": "2026-10-27T07:35:54.564Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "git diff -- src/pages/project-editor.tsx src/pages/landing.tsx index.html .gitignore | sed -n '1,260p'",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": true,
+      "command": "git diff -- src/pages/project-editor.tsx src/pages/landing.tsx index.html .gitignore | sed -n '1,260p'"
+    },
+    "at": "2026-10-27T07:35:54.568Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "git diff --check; git status --short",
+    "metadata": {
+      "command": "git diff --check; git status --short",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:36:40.095Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "git diff --check; git status --short",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "git diff --check; git status --short"
+    },
+    "at": "2026-10-27T07:36:40.097Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "npx --yes prettier@3.9.10 --check --no-semi --print-width 100 src/pages/landing.tsx",
+    "metadata": {
+      "command": "npx --yes prettier@3.9.10 --check --no-semi --print-width 100 src/pages/landing.tsx",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:36:44.820Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "npx --yes prettier@3.9.10 --check --no-semi --print-width 100 src/pages/landing.tsx",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "npx --yes prettier@3.9.10 --check --no-semi --print-width 100 src/pages/landing.tsx"
+    },
+    "at": "2026-10-27T07:36:44.823Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "bugfix",
+    "metadata": {
+      "intent": "bugfix",
+      "selectedSkills": [
+        "software-engineering",
+        "react",
+        "angular",
+        "verification-discipline"
+      ],
+      "suppressedSkills": [
+        "human-ui-design",
+        "ui-pattern-library",
+        "auth-identity",
+        "typescript"
+      ],
+      "confidence": 71
+    },
+    "at": "2026-10-27T07:39:28.574Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "software-engineering",
+    "metadata": {
+      "skill": "software-engineering",
+      "intent": "bugfix"
+    },
+    "at": "2026-10-27T07:39:28.576Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "react",
+    "metadata": {
+      "skill": "react",
+      "intent": "bugfix"
+    },
+    "at": "2026-10-27T07:39:28.579Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "angular",
+    "metadata": {
+      "skill": "angular",
+      "intent": "bugfix"
+    },
+    "at": "2026-10-27T07:39:28.581Z"
+  },
+  {
+    "kind": "skill_selected",
+    "name": "verification-discipline",
+    "metadata": {
+      "skill": "verification-discipline",
+      "intent": "bugfix"
+    },
+    "at": "2026-10-27T07:39:28.584Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "auto_activation",
+    "metadata": {
+      "activate": true,
+      "confidence": 0.75,
+      "reason": "action request phrased as question",
+      "signals": [
+        "action_verb",
+        "question_mark",
+        "action_request_frame"
+      ]
+    },
+    "at": "2026-10-27T07:39:28.591Z"
+  },
+  {
+    "kind": "routing_decision",
+    "name": "planner",
+    "metadata": {
+      "plannerMode": "linear-fallback",
+      "detectedUnits": [],
+      "fallbackReason": "Intent not eligible for parallel fan-out."
+    },
+    "at": "2026-10-27T07:39:28.599Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "grep -n \"^function \\|^export function\" src/pages/landing.tsx; grep -n -iE \"ai|agent|assistant|book\" src/pages/landing.tsx",
+    "metadata": {
+      "command": "grep -n \"^function \\|^export function\" src/pages/landing.tsx; grep -n -iE \"ai|agent|assistant|book\" src/pages/landing.tsx",
+      "status": "fail"
+    },
+    "at": "2026-10-27T07:40:11.502Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "grep -n \"^function \\|^export function\" src/pages/landing.tsx; grep -n -iE \"ai|agent|assistant|book\" src/pages/landing.tsx",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "grep -n \"^function \\|^export function\" src/pages/landing.tsx; grep -n -iE \"ai|agent|assistant|book\" src/pages/landing.tsx"
+    },
+    "at": "2026-10-27T07:40:11.505Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "sed -n '1,60p' src/pages/landing.tsx; sed -n '440,470p' src/pages/landing.tsx; sed -n '590,940p' src/pages/landing.tsx; sed -n '1000,1185p' src/pages/landing.tsx",
+    "metadata": {
+      "command": "sed -n '1,60p' src/pages/landing.tsx; sed -n '440,470p' src/pages/landing.tsx; sed -n '590,940p' src/pages/landing.tsx; sed -n '1000,1185p' src/pages/landing.tsx",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:40:41.999Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "sed -n '1,60p' src/pages/landing.tsx; sed -n '440,470p' src/pages/landing.tsx; sed -n '590,940p' src/pages/landing.tsx; sed -n '1000,1185p' src/pages/landing.tsx",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "sed -n '1,60p' src/pages/landing.tsx; sed -n '440,470p' src/pages/landing.tsx; sed -n '590,940p' src/pages/landing.tsx; sed -n '1000,1185p' src/pages/landing.tsx"
+    },
+    "at": "2026-10-27T07:40:42.001Z"
+  },
+  {
+    "kind": "context_autocompaction",
+    "name": "checkpoint",
+    "metadata": {
+      "usagePercent": 0.864,
+      "tokensUsed": 172731,
+      "contextLimit": 200000,
+      "knownLimit": true
+    },
+    "at": "2026-10-27T07:41:05.504Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "grep -n \"Download\\|Upload\\|FileImage\\|FileCode2\\|Play\\b\\|CheckCircle2\\|ArrowUpRight\\|Check\\b\\|BookOpen\\|Sparkles\\|Library\\|MessageSquareText\" src/pages/landing.tsx",
+    "metadata": {
+      "command": "grep -n \"Download\\|Upload\\|FileImage\\|FileCode2\\|Play\\b\\|CheckCircle2\\|ArrowUpRight\\|Check\\b\\|BookOpen\\|Sparkles\\|Library\\|MessageSquareText\" src/pages/landing.tsx",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:44:22.526Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "grep -n \"Download\\|Upload\\|FileImage\\|FileCode2\\|Play\\b\\|CheckCircle2\\|ArrowUpRight\\|Check\\b\\|BookOpen\\|Sparkles\\|Library\\|MessageSquareText\" src/pages/landing.tsx",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "grep -n \"Download\\|Upload\\|FileImage\\|FileCode2\\|Play\\b\\|CheckCircle2\\|ArrowUpRight\\|Check\\b\\|BookOpen\\|Sparkles\\|Library\\|MessageSquareText\" src/pages/landing.tsx"
+    },
+    "at": "2026-10-27T07:44:22.529Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "grep -n \"cn(\" src/pages/landing.tsx; sed -n '300,460p' src/pages/landing.tsx; sed -n '940,1005p' src/pages/landing.tsx",
+    "metadata": {
+      "command": "grep -n \"cn(\" src/pages/landing.tsx; sed -n '300,460p' src/pages/landing.tsx; sed -n '940,1005p' src/pages/landing.tsx",
+      "status": "fail"
+    },
+    "at": "2026-10-27T07:44:53.671Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "grep -n \"cn(\" src/pages/landing.tsx; sed -n '300,460p' src/pages/landing.tsx; sed -n '940,1005p' src/pages/landing.tsx",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "grep -n \"cn(\" src/pages/landing.tsx; sed -n '300,460p' src/pages/landing.tsx; sed -n '940,1005p' src/pages/landing.tsx"
+    },
+    "at": "2026-10-27T07:44:53.674Z"
+  },
+  {
+    "kind": "verification_used",
+    "name": "grep -n \"ReactNode\\|StatusPill\\|cn(\" src/pages/landing.tsx; grep -n \"ArrowUpRight\\|CheckCircle2\\|Check\\b\" src/pages/landing.tsx",
+    "metadata": {
+      "command": "grep -n \"ReactNode\\|StatusPill\\|cn(\" src/pages/landing.tsx; grep -n \"ArrowUpRight\\|CheckCircle2\\|Check\\b\" src/pages/landing.tsx",
+      "status": "unknown"
+    },
+    "at": "2026-10-27T07:45:16.618Z"
+  },
+  {
+    "kind": "verification_result",
+    "name": "grep -n \"ReactNode\\|StatusPill\\|cn(\" src/pages/landing.tsx; grep -n \"ArrowUpRight\\|CheckCircle2\\|Check\\b\" src/pages/landing.tsx",
+    "metadata": {
+      "skill": "software-engineering",
+      "passed": false,
+      "command": "grep -n \"ReactNode\\|StatusPill\\|cn(\" src/pages/landing.tsx; grep -n \"ArrowUpRight\\|CheckCircle2\\|Check\\b\" src/pages/landing.tsx"
+    },
+    "at": "2026-10-27T07:45:16.620Z"
   }
 ]

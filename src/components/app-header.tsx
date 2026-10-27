@@ -1,8 +1,6 @@
-import { useState } from "react"
-import { FileText, LogOut, Settings2 } from "lucide-react"
+import { FileText, LogOut } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 
-import { AiSettingsDialog } from "@/components/ai-settings-dialog"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -25,7 +23,6 @@ export function AppHeader({
   fluid?: boolean
 }) {
   const navigate = useNavigate()
-  const [aiSettingsOpen, setAiSettingsOpen] = useState(false)
 
   async function handleLogout() {
     const session = loadSession()
@@ -84,11 +81,6 @@ export function AppHeader({
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => setAiSettingsOpen(true)}>
-                <Settings2 />
-                Pengaturan AI
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={handleLogout}>
                 <LogOut />
                 Keluar
@@ -97,10 +89,6 @@ export function AppHeader({
           </DropdownMenu>
         </div>
       </div>
-      <AiSettingsDialog
-        open={aiSettingsOpen}
-        onOpenChange={setAiSettingsOpen}
-      />
     </header>
   )
 }
