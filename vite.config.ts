@@ -14,6 +14,17 @@ export default defineConfig({
   build: {
     // Editor LaTeX (CodeMirror) cukup besar; pisahkan agar tidak memblokir awal.
     chunkSizeWarningLimit: 900,
+    modulePreload: {
+      resolveDependencies(_filename, deps) {
+        // Jangan preload chunk berat (editor, pdf) di awal agar initial load landing page cepat.
+        return deps.filter(
+          (dep) =>
+            !dep.includes('editor') &&
+            !dep.includes('pdf') &&
+            !dep.includes('project-editor')
+        )
+      },
+    },
     rollupOptions: {
       output: {
         // Server statis yang dipakai deployment tidak selalu memetakan .mjs ke

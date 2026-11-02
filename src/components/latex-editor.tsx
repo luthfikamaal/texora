@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef } from "react"
 import { StreamLanguage } from "@codemirror/language"
 import { stex } from "@codemirror/legacy-modes/mode/stex"
-import type { EditorView } from "@codemirror/view"
+import { keymap, type EditorView } from "@codemirror/view"
 import CodeMirror from "@uiw/react-codemirror"
+import { autocompletion, acceptCompletion } from "@codemirror/autocomplete"
+import { Prec } from "@codemirror/state"
+import { latexCompletions } from "@/lib/latex-completions"
 
 /**
  * Editor LaTeX berbasis CodeMirror.
@@ -25,7 +28,17 @@ export function LatexEditor({
   gotoLine?: number | null
 }) {
   const viewRef = useRef<EditorView | null>(null)
-  const extensions = useMemo(() => [StreamLanguage.define(stex)], [])
+  const extensions = useMemo(
+    () => [
+      StreamLanguage.define(stex),
+      autocompletion({
+        override: [latexCompletions],
+        activateOnTyping: true,
+      }),
+      Prec.highest(keymap.of([{ key: "Tab", run: acceptCompletion }])),
+    ],
+    [],
+  )
 
   useEffect(() => {
     const view = viewRef.current
