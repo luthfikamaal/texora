@@ -256,46 +256,46 @@ export function isActiveRun(status: AgentRunStatus): boolean {
   return ACTIVE_RUN_STATUSES.includes(status)
 }
 
-/** Run yang menempati slot aktif project (termasuk yang dijeda). */
+/** Runs that hold the active slot in a project (including paused). */
 export function isRunBlocking(status: AgentRunStatus): boolean {
   return isActiveRun(status) || status === "paused"
 }
 
 export const RUN_STATUS_LABEL: Record<AgentRunStatus, string> = {
-  queued: "Menunggu antrean",
-  planning: "Menyusun rencana",
-  drafting: "Menulis draf",
-  reviewing: "Sedang ditinjau",
-  revising: "Revisi",
-  editorial: "Penyuntingan",
-  waiting_review: "Menunggu persetujuan",
-  applying: "Menerapkan ke proyek",
-  paused: "Dijeda",
-  completed: "Selesai",
-  failed: "Gagal",
-  cancelled: "Dibatalkan",
+  queued: "Queued",
+  planning: "Planning",
+  drafting: "Drafting",
+  reviewing: "Reviewing",
+  revising: "Revising",
+  editorial: "Editorial check",
+  waiting_review: "Awaiting approval",
+  applying: "Applying to project",
+  paused: "Paused",
+  completed: "Completed",
+  failed: "Failed",
+  cancelled: "Cancelled",
 }
 
 export const CHAPTER_STATUS_LABEL: Record<ChapterStatus, string> = {
-  not_started: "Belum dimulai",
-  queued: "Dalam antrean",
-  running: "Diproses",
-  waiting_review: "Menunggu tinjauan",
-  approved: "Disetujui",
-  applied: "Diterapkan",
-  compiled: "Selesai",
-  failed: "Gagal",
+  not_started: "Not started",
+  queued: "Queued",
+  running: "In progress",
+  waiting_review: "Awaiting review",
+  approved: "Approved",
+  applied: "Applied",
+  compiled: "Compiled",
+  failed: "Failed",
 }
 
 export const SOURCE_STATUS_LABEL: Record<SourceStatus, string> = {
-  pending: "Menunggu",
-  extracting: "Ekstraksi teks",
-  ready: "Siap",
-  needs_text: "Butuh teks",
-  failed: "Gagal",
+  pending: "Pending",
+  extracting: "Extracting text",
+  ready: "Ready",
+  needs_text: "Needs text",
+  failed: "Failed",
 }
 
-/** Status bab yang boleh memulai run baru. */
+/** Chapter statuses that allow starting a new run. */
 export function isChapterStartable(status: ChapterStatus): boolean {
   return (
     status === "not_started" ||
@@ -304,7 +304,7 @@ export function isChapterStartable(status: ChapterStatus): boolean {
   )
 }
 
-/** Ambil payload JSON dari artifact (content object atau content_text JSON). */
+/** Retrieve JSON payload from artifact (content object or content_text JSON). */
 export function readArtifactJSON<T>(artifact?: AgentArtifact): T | null {
   if (!artifact) return null
   if (artifact.content && typeof artifact.content === "object") {
@@ -335,7 +335,7 @@ export function formatDateTime(value?: string): string {
   if (!value) return "-"
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return "-"
-  return new Intl.DateTimeFormat("id-ID", {
+  return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date)

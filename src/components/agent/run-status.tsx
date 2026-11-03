@@ -89,7 +89,7 @@ export function ChapterStatusBadge({
 }
 
 export function RunScopeLabel({ run }: { run: AgentRun }) {
-  return <>{run.scope === "book_setup" ? "Penyusunan buku" : "Penulisan bab"}</>
+  return <>{run.scope === "book_setup" ? "Book outline generation" : "Chapter drafting"}</>
 }
 
 export function ActiveRunCard({
@@ -124,14 +124,14 @@ export function ActiveRunCard({
             disabled={cancelling || !!run.cancel_requested_at}
           >
             <X />
-            {run.cancel_requested_at ? "Membatalkan..." : "Batalkan"}
+            {run.cancel_requested_at ? "Cancelling..." : "Cancel"}
           </Button>
         )}
       </div>
       <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-xs">
-        <span>Mulai: {formatDateTime(run.started_at ?? run.created_at)}</span>
+        <span>Started: {formatDateTime(run.started_at ?? run.created_at)}</span>
         {run.finished_at && (
-          <span>Selesai: {formatDateTime(run.finished_at)}</span>
+          <span>Finished: {formatDateTime(run.finished_at)}</span>
         )}
       </div>
       {run.status === "failed" && (run.error_code || run.error_message) && (

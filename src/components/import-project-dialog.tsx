@@ -1,5 +1,8 @@
-import { useEffect, useState } from "react"
-import { FileArchive, UploadCloud, X } from "lucide-react"
+import { useRef, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { FileArchive, Upload, X } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -17,29 +20,34 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
-import { formatBytes, useFileUpload } from "@/hooks/use-file-upload"
 import { ApiError } from "@/lib/api"
 import type { ImportResponse } from "@/lib/project-types"
 import { MAX_ZIP_BYTES } from "@/lib/project-types"
 import { cn } from "@/lib/utils"
 
-/**
- * Import project dari .zip.
- * Drag & drop / pilih file memakai hook `useFileUpload` dari ReUI.
- *
- * Batas server: ZIP 30 MB, hasil ekstrak 100 MB, 500 file, 15 MB/file.
- */
+const schema = z.object({
+  name: z
+    .string()
+    .trim()
+    .max(100, "Maximum 100 characters")
+    .optional(),
+  description: z
+    .string()
+    .trim()
+    .max(500, "Maximum 500 characters")
+    .optional(),
+})
+
+type Values = z.infer<typeof schema>
+
+function formatSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export function ImportProjectDialog({
   open,
   onOpenChange,
@@ -53,201 +61,232 @@ export function ImportProjectDialog({
     description?: string,
   ) => Promise<ImportResponse>
 }) {
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-  const [submitting, setSubmitting] = useState(false)
+  const [file, setFile] = useState<File | null>(null)
+  const [fileError, setFileError] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
+  const [dragOver, setDragOver] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [state, actions] = useFileUpload({
-    accept: ".zip,application/zip,application/x-zip-compressed",
-    maxFiles: 1,
-    maxSize: MAX_ZIP_BYTES,
+  const form = useForm<Values>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: "", description: "" },
   })
 
-  const picked = state.files[0]
-  const pickedFile = picked && picked.file instanceof File ? picked.file : null
+  function resetState() {
+    setFile(null)
+    setFileError(null)
+    setFormError(null)
+    setDragOver(false)
+    form.reset()
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
 
-  // Reset saat dialog ditutup.
-  useEffect(() => {
-    if (!open) {
-      actions.clearFiles()
-      actions.clearErrors()
-      setName("")
-      setDescription("")
-      setFormError(null)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
+  function handleOpenChange(next: boolean) {
+    if (!next) resetState()
+    onOpenChange(next)
+  }
 
-  async function handleSubmit() {
-    if (!pickedFile) {
-      setFormError("Pilih berkas .zip terlebih dahulu")
+  function validateAndSetFile(f: File | null | undefined) {
+    setFileError(null)
+    setFormError(null)
+    if (!f) {
+      setFile(null)
       return
     }
-    setSubmitting(true)
-    setFormError(null)
-    try {
-      await onImport(pickedFile, name, description)
-      onOpenChange(false)
-    } catch (err) {
-      if (err instanceof ApiError) {
-        if (err.status === 413) {
-          setFormError("Berkas melebihi 30 MB")
-          return
-        }
-        setFormError(err.fields?.file ?? err.fields?.name ?? err.message)
-        return
-      }
-      setFormError("Tidak dapat terhubung ke server.")
-    } finally {
-      setSubmitting(false)
+    const isZip =
+      f.name.toLowerCase().endsWith(".zip") ||
+      f.type === "application/zip" ||
+      f.type === "application/x-zip-compressed"
+    if (!isZip) {
+      setFile(null)
+      setFileError("Only .zip archives are supported.")
+      return
+    }
+    if (f.size > MAX_ZIP_BYTES) {
+      setFile(null)
+      setFileError(
+        `File is too large (${formatSize(f.size)}). Max allowed is ${formatSize(MAX_ZIP_BYTES)}.`,
+      )
+      return
+    }
+    setFile(f)
+
+    const baseName = f.name.replace(/\.zip$/i, "").trim()
+    if (!form.getValues("name") && baseName) {
+      form.setValue("name", baseName.slice(0, 100))
     }
   }
 
+  const onSubmit = form.handleSubmit(async (values) => {
+    if (!file) {
+      setFileError("Please choose a .zip file to upload")
+      return
+    }
+    setFormError(null)
+    try {
+      await onImport(
+        file,
+        values.name?.trim() || undefined,
+        values.description?.trim() || undefined,
+      )
+      handleOpenChange(false)
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.fields?.file) setFileError(err.fields.file)
+        if (err.fields?.name) form.setError("name", { message: err.fields.name })
+        if (err.fields?.description) {
+          form.setError("description", { message: err.fields.description })
+        }
+        setFormError(err.message)
+        return
+      }
+      setFormError("Unable to reach the server. Please check your connection.")
+    }
+  })
+
+  const { errors, isSubmitting } = form.formState
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[90svh] max-h-[36rem] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
-        <DialogHeader className="shrink-0 px-4 pt-4 pb-2">
-          <DialogTitle>Import project</DialogTitle>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Import project from .zip</DialogTitle>
           <DialogDescription>
-            Unggah berkas <code>.zip</code> berisi file LaTeX. Struktur folder
-            dan gambar di dalam ZIP dipertahankan, dan main file dideteksi
-            otomatis.
+            Upload a .zip file containing your LaTeX document. The primary root file will be automatically identified.
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="min-h-0 flex-1">
-          <div className="flex flex-col gap-3 px-4 py-3">
-            <Field data-invalid={state.errors.length > 0 || !!formError}>
-              <FieldLabel>Berkas ZIP</FieldLabel>
+        <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+          <Field data-invalid={!!fileError}>
+            <FieldLabel htmlFor="zip-file-input">Archive file (.zip)</FieldLabel>
+            <input
+              ref={fileInputRef}
+              id="zip-file-input"
+              type="file"
+              accept=".zip,application/zip,application/x-zip-compressed"
+              className="sr-only"
+              onChange={(e) => validateAndSetFile(e.target.files?.[0])}
+            />
 
-              {pickedFile ? (
-                <Item variant="muted" size="sm">
-                  <ItemMedia variant="icon">
-                    <FileArchive />
-                  </ItemMedia>
-                  <ItemContent>
-                    <ItemTitle>{pickedFile.name}</ItemTitle>
-                    <ItemDescription>
-                      {formatBytes(pickedFile.size)}
-                    </ItemDescription>
-                  </ItemContent>
-                  <ItemActions>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label="Hapus berkas"
-                      onClick={() => actions.clearFiles()}
-                    >
-                      <X />
-                    </Button>
-                  </ItemActions>
-                </Item>
-              ) : (
-                <div
-                  role="button"
-                  tabIndex={0}
-                  aria-label="Pilih atau tarik berkas ZIP"
-                  onClick={actions.openFileDialog}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault()
-                      actions.openFileDialog()
-                    }
-                  }}
-                  onDragEnter={actions.handleDragEnter}
-                  onDragLeave={actions.handleDragLeave}
-                  onDragOver={actions.handleDragOver}
-                  onDrop={actions.handleDrop}
-                  className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-lg border-2 border-dashed p-3.5 text-left transition-colors",
-                    state.isDragging
-                      ? "border-primary bg-muted/60"
-                      : "hover:bg-muted/40",
-                  )}
-                >
-                  <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-lg">
-                    <UploadCloud className="text-muted-foreground size-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">
-                      Tarik .zip atau klik untuk memilih
-                    </p>
+            {!file ? (
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault()
+                    fileInputRef.current?.click()
+                  }
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  setDragOver(true)
+                }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  setDragOver(false)
+                  validateAndSetFile(e.dataTransfer.files?.[0])
+                }}
+                className={cn(
+                  "hover:bg-muted/50 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-6 text-center transition-colors",
+                  dragOver && "border-primary bg-primary/5",
+                  fileError && "border-destructive/60 bg-destructive/5",
+                )}
+              >
+                <div className="bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-lg">
+                  <Upload className="size-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">
+                    Click to select or drag and drop your .zip here
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    Maximum size: 30 MB
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-muted/40 flex items-center justify-between gap-3 rounded-xl border p-3">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-md">
+                    <FileArchive className="size-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{file.name}</p>
                     <p className="text-muted-foreground text-xs">
-                      Maksimal {formatBytes(MAX_ZIP_BYTES, 0)} · hanya .zip
+                      {formatSize(file.size)}
                     </p>
                   </div>
                 </div>
-              )}
-
-              <input {...actions.getInputProps({ className: "sr-only" })} />
-
-              <FieldDescription className="text-xs">
-                Maks. hasil ekstrak 100 MB · 500 file · 15 MB per file. Folder
-                seperti <code>__MACOSX/</code>, <code>.git/</code>, dan{" "}
-                <code>node_modules/</code> dilewati.
-              </FieldDescription>
-              {state.errors.length > 0 && (
-                <FieldError>{state.errors.join(", ")}</FieldError>
-              )}
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="import-name">
-                Nama project (opsional)
-              </FieldLabel>
-              <Input
-                id="import-name"
-                placeholder="Kosongkan untuk memakai nama berkas"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                maxLength={100}
-              />
-              <FieldDescription className="text-xs">
-                Bila nama sudah dipakai, server menambahkan akhiran “ (2)”.
-              </FieldDescription>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="import-description">
-                Deskripsi (opsional)
-              </FieldLabel>
-              <Textarea
-                id="import-description"
-                rows={2}
-                maxLength={500}
-                placeholder="Catatan singkat tentang project"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </Field>
-
-            {formError && (
-              <p className="text-destructive text-sm" role="alert">
-                {formError}
-              </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Remove chosen file"
+                  onClick={() => {
+                    setFile(null)
+                    if (fileInputRef.current) fileInputRef.current.value = ""
+                  }}
+                >
+                  <X className="size-4" />
+                </Button>
+              </div>
             )}
-          </div>
-        </ScrollArea>
+            <FieldError>{fileError}</FieldError>
+            <FieldDescription className="text-xs">
+              Folder structures, nested chapters, figures, and .bib files will be preserved intact.
+            </FieldDescription>
+          </Field>
 
-        <DialogFooter className="mx-0 mb-0 shrink-0 rounded-b-xl">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            Batal
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitting || !pickedFile}
-          >
-            {submitting && <Spinner />}
-            Import
-          </Button>
-        </DialogFooter>
+          <Field data-invalid={!!errors.name}>
+            <FieldLabel htmlFor="import-project-name">
+              Project name (optional)
+            </FieldLabel>
+            <Input
+              id="import-project-name"
+              placeholder="Defaults to the zip filename"
+              aria-invalid={!!errors.name}
+              {...form.register("name")}
+            />
+            <FieldError>{errors.name?.message}</FieldError>
+          </Field>
+
+          <Field data-invalid={!!errors.description}>
+            <FieldLabel htmlFor="import-project-description">
+              Description (optional)
+            </FieldLabel>
+            <Textarea
+              id="import-project-description"
+              rows={2}
+              placeholder="Short document notes"
+              aria-invalid={!!errors.description}
+              {...form.register("description")}
+            />
+            <FieldError>{errors.description?.message}</FieldError>
+          </Field>
+
+          {formError && (
+            <p className="text-destructive text-sm" role="alert">
+              {formError}
+            </p>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting || !file}>
+              {isSubmitting && <Spinner />}
+              Import project
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

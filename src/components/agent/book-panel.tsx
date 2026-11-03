@@ -46,7 +46,7 @@ export function BookPanel({
   const [topic, setTopic] = useState("")
   const [subject, setSubject] = useState("")
   const [level, setLevel] = useState("")
-  const [language, setLanguage] = useState("id")
+  const [language, setLanguage] = useState("en")
   const [goals, setGoals] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [topicError, setTopicError] = useState<string | null>(null)
@@ -92,7 +92,7 @@ export function BookPanel({
       .catch((err: unknown) => {
         if (cancelled) return
         setDetailError(
-          err instanceof Error ? err.message : "Gagal memuat detail tinjauan"
+          err instanceof Error ? err.message : "Failed to load review details"
         )
       })
       .finally(() => {
@@ -113,7 +113,7 @@ export function BookPanel({
 
   async function handleCreate() {
     if (topic.trim().length < 3) {
-      setTopicError("Topik minimal 3 karakter")
+      setTopicError("Topic must be at least 3 characters")
       return
     }
     setTopicError(null)
@@ -125,19 +125,19 @@ export function BookPanel({
           topic: topic.trim(),
           subject: subject.trim(),
           level: level.trim(),
-          language: language.trim() || "id",
+          language: language.trim() || "en",
           goals: goals
             .split("\n")
             .map((line) => line.trim())
             .filter(Boolean),
         },
       })
-      toast.success("Penyusunan buku dimulai", {
-        description: "Agent sedang menyusun outline. Anda bisa memantau di sini.",
+      toast.success("Book outline generation started", {
+        description: "The agent is drafting the book outline. You can monitor progress here.",
       })
       await onRefresh()
     } catch (err) {
-      toast.error("Gagal memulai penyusunan buku", {
+      toast.error("Failed to start book generation", {
         description: err instanceof Error ? err.message : undefined,
       })
     } finally {
@@ -150,10 +150,10 @@ export function BookPanel({
     setCancelling(true)
     try {
       await agentApi.cancelRun(projectId, bookRun.id)
-      toast.success("Permintaan pembatalan dikirim")
+      toast.success("Cancellation requested")
       await onRefresh()
     } catch (err) {
-      toast.error("Gagal membatalkan run", {
+      toast.error("Failed to cancel run", {
         description: err instanceof Error ? err.message : undefined,
       })
     } finally {
@@ -167,11 +167,11 @@ export function BookPanel({
     try {
       if (decision === "approve") {
         await agentApi.approveRun(projectId, reviewRun.id, notes.trim())
-        toast.success("Outline buku disetujui")
+        toast.success("Book outline approved")
       } else {
         await agentApi.rejectRun(projectId, reviewRun.id, notes.trim())
-        toast.success("Outline ditolak", {
-          description: "Anda dapat menyusun ulang dengan brief yang diperbaiki.",
+        toast.success("Outline rejected", {
+          description: "You can generate a new outline with a revised brief.",
         })
       }
       setNotes("")
@@ -179,8 +179,8 @@ export function BookPanel({
     } catch (err) {
       toast.error(
         decision === "approve"
-          ? "Gagal menyetujui outline"
-          : "Gagal menolak outline",
+          ? "Failed to approve outline"
+          : "Failed to reject outline",
         { description: err instanceof Error ? err.message : undefined }
       )
     } finally {
@@ -197,9 +197,9 @@ export function BookPanel({
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h3 className="text-sm font-medium">Tinjau outline buku</h3>
+            <h3 className="text-sm font-medium">Review Book Outline</h3>
             <p className="text-muted-foreground text-xs">
-              Periksa struktur bab sebelum agent menulis chapter.
+              Review the chapter structure before the agent drafts individual chapters.
             </p>
           </div>
           <RunStatusBadge status={reviewRun.status} />
@@ -215,7 +215,7 @@ export function BookPanel({
           <ProfileSpecView spec={profileSpec} />
         ) : (
           <p className="text-muted-foreground text-sm">
-            Artifact outline belum tersedia. Coba muat ulang.
+            Outline artifact is not available yet. Try refreshing.
           </p>
         )}
 
@@ -223,12 +223,12 @@ export function BookPanel({
 
         <Field>
           <FieldLabel htmlFor="book-review-notes">
-            Catatan (opsional)
+            Notes (optional)
           </FieldLabel>
           <Textarea
             id="book-review-notes"
             rows={2}
-            placeholder="Alasan penolakan atau catatan untuk revisi"
+            placeholder="Reason for rejection or guidance for revision"
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
           />
@@ -245,7 +245,7 @@ export function BookPanel({
             disabled={deciding !== null || !profileSpec}
           >
             {deciding === "approve" ? <Spinner /> : <Check />}
-            Setujui outline
+            Approve outline
           </Button>
           <Button
             variant="outline"
@@ -253,7 +253,7 @@ export function BookPanel({
             disabled={deciding !== null}
           >
             {deciding === "reject" ? <Spinner /> : <X />}
-            Tolak
+            Reject
           </Button>
         </div>
       </div>
@@ -273,8 +273,8 @@ export function BookPanel({
       {bookRun &&
         (bookRun.status === "failed" || bookRun.status === "cancelled") && (
           <p className="text-muted-foreground text-xs">
-            Run terakhir {bookRun.status === "failed" ? "gagal" : "dibatalkan"}.
-            Perbaiki brief lalu mulai lagi.
+            Last run {bookRun.status === "failed" ? "failed" : "was cancelled"}.
+            Adjust the brief and try again.
           </p>
         )}
 
@@ -283,19 +283,19 @@ export function BookPanel({
           <BookOpen className="size-4" />
         </div>
         <div>
-          <h3 className="text-sm font-medium">Susun buku ajar</h3>
+          <h3 className="text-sm font-medium">Generate Textbook Outline</h3>
           <p className="text-muted-foreground text-xs">
-            Agent membuat outline buku dari brief Anda. Setelah disetujui,
-            setiap bab ditulis, ditinjau, dan diterapkan ke project.
+            The agent constructs a book outline from your brief. Once approved,
+            each chapter is drafted, reviewed, and applied to your project.
           </p>
         </div>
       </div>
 
       <Field data-invalid={!!topicError}>
-        <FieldLabel htmlFor="book-topic">Topik buku</FieldLabel>
+        <FieldLabel htmlFor="book-topic">Book topic</FieldLabel>
         <Input
           id="book-topic"
-          placeholder="Statistika untuk Ilmu Sosial"
+          placeholder="e.g. Statistical Methods for Data Science"
           value={topic}
           onChange={(event) => setTopic(event.target.value)}
           aria-invalid={!!topicError}
@@ -306,30 +306,30 @@ export function BookPanel({
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Field>
-          <FieldLabel htmlFor="book-subject">Mata kuliah</FieldLabel>
+          <FieldLabel htmlFor="book-subject">Subject / Field</FieldLabel>
           <Input
             id="book-subject"
-            placeholder="Statistika"
+            placeholder="e.g. Statistics"
             value={subject}
             onChange={(event) => setSubject(event.target.value)}
             disabled={submitting}
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="book-level">Jenjang</FieldLabel>
+          <FieldLabel htmlFor="book-level">Academic level</FieldLabel>
           <Input
             id="book-level"
-            placeholder="S1 semester 2"
+            placeholder="e.g. Undergraduate (Year 2)"
             value={level}
             onChange={(event) => setLevel(event.target.value)}
             disabled={submitting}
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="book-language">Bahasa</FieldLabel>
+          <FieldLabel htmlFor="book-language">Language</FieldLabel>
           <Input
             id="book-language"
-            placeholder="id"
+            placeholder="en"
             value={language}
             onChange={(event) => setLanguage(event.target.value)}
             disabled={submitting}
@@ -338,24 +338,24 @@ export function BookPanel({
       </div>
 
       <Field>
-        <FieldLabel htmlFor="book-goals">Tujuan pembelajaran (opsional)</FieldLabel>
+        <FieldLabel htmlFor="book-goals">Learning objectives (optional)</FieldLabel>
         <Textarea
           id="book-goals"
           rows={3}
-          placeholder={"Satu tujuan per baris\nMemahami uji hipotesis\nMenerapkan regresi linear"}
+          placeholder={"One objective per line\nUnderstand hypothesis testing\nApply linear regression models"}
           value={goals}
           onChange={(event) => setGoals(event.target.value)}
           disabled={submitting}
         />
         <FieldDescription>
-          Gunakan satu tujuan per baris agar mudah dipetakan ke bab.
+          Enter one learning objective per line for accurate chapter mapping.
         </FieldDescription>
       </Field>
 
       <div>
         <Button onClick={() => void handleCreate()} disabled={submitting}>
           {submitting ? <Spinner /> : <BookOpen />}
-          Mulai susun outline
+          Generate outline
         </Button>
       </div>
     </div>
@@ -377,15 +377,15 @@ export function ProfileSpecView({ spec }: { spec: BookProfileSpec }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="bg-card rounded-lg border p-4">
-        <h4 className="text-base font-semibold">{spec.title || "Tanpa judul"}</h4>
+        <h4 className="text-base font-semibold">{spec.title || "Untitled"}</h4>
         {spec.subtitle && (
           <p className="text-muted-foreground text-sm">{spec.subtitle}</p>
         )}
         <div className="text-muted-foreground mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
           {spec.subject && <span>{spec.subject}</span>}
           {spec.level && <span>{spec.level}</span>}
-          {spec.language && <span>Bahasa: {spec.language}</span>}
-          <span>{chapters.length} bab</span>
+          {spec.language && <span>Language: {spec.language}</span>}
+          <span>{chapters.length} chapters</span>
         </div>
         {spec.description && (
           <p className="text-muted-foreground mt-3 text-sm">{spec.description}</p>
@@ -394,7 +394,7 @@ export function ProfileSpecView({ spec }: { spec: BookProfileSpec }) {
 
       {(spec.learning_outcomes?.length ?? 0) > 0 && (
         <div>
-          <h5 className="mb-1.5 text-xs font-medium">Capaian pembelajaran</h5>
+          <h5 className="mb-1.5 text-xs font-medium">Learning outcomes</h5>
           <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-xs">
             {spec.learning_outcomes.map((outcome, index) => (
               <li key={index}>{outcome}</li>
@@ -404,7 +404,7 @@ export function ProfileSpecView({ spec }: { spec: BookProfileSpec }) {
       )}
 
       <div>
-        <h5 className="mb-1.5 text-xs font-medium">Struktur bab</h5>
+        <h5 className="mb-1.5 text-xs font-medium">Chapter structure</h5>
         <ol className="flex flex-col gap-2">
           {chapters
             .slice()
@@ -431,7 +431,7 @@ export function ProfileSpecView({ spec }: { spec: BookProfileSpec }) {
 
       {spec.bibliography_policy && (
         <p className="text-muted-foreground text-xs">
-          Kebijakan bibliografi: {spec.bibliography_policy}
+          Bibliography policy: {spec.bibliography_policy}
         </p>
       )}
     </div>
@@ -452,7 +452,7 @@ function BookProfileView({ book }: { book: AgentBook }) {
             variant="outline"
             className="border-emerald-500/40 bg-emerald-500/10 font-normal text-emerald-700 dark:text-emerald-400"
           >
-            Disetujui
+            Approved
           </Badge>
         </div>
         {profile.spec.subtitle && (
@@ -461,15 +461,15 @@ function BookProfileView({ book }: { book: AgentBook }) {
         <div className="text-muted-foreground mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
           {profile.spec.subject && <span>{profile.spec.subject}</span>}
           {profile.spec.level && <span>{profile.spec.level}</span>}
-          <span>{chapters.length} bab</span>
+          <span>{chapters.length} chapters</span>
           {profile.approved_at && (
-            <span>Disetujui {formatDateTime(profile.approved_at)}</span>
+            <span>Approved on {formatDateTime(profile.approved_at)}</span>
           )}
         </div>
       </div>
 
       <div>
-        <h4 className="mb-1.5 text-xs font-medium">Bab</h4>
+        <h4 className="mb-1.5 text-xs font-medium">Chapters</h4>
         <ol className="flex flex-col gap-1.5">
           {chapters
             .slice()
@@ -493,7 +493,7 @@ function BookProfileView({ book }: { book: AgentBook }) {
 
       <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
         <RefreshCw className="size-3" />
-        Buka tab Bab untuk menulis dan meninjau isi setiap bab.
+        Switch to the Chapters tab to draft and review each chapter.
       </p>
     </div>
   )

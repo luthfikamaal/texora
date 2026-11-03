@@ -8,11 +8,8 @@ import { projectApi } from "@/lib/project-api"
 import type { CompileFailure, CompileIssue } from "@/lib/project-types"
 
 /**
- * Panel error kompilasi.
- *
- * Server sudah mem-parse log (file, line, message), jadi tidak ada parsing
- * di sisi klien — tinggal tampilkan, dan klik baris untuk lompat ke baris itu
- * di editor.
+ * LaTeX compilation failure panel.
+ * Displays parsed issues and allows jumping directly to offending line numbers.
  */
 export function CompileErrorPanel({
   projectId,
@@ -31,15 +28,18 @@ export function CompileErrorPanel({
 
   const isTimeout = failure.status === "timeout"
 
-  // Ambil log mentah hanya saat panel terminal dibuka.
+  // Fetch raw log only when terminal view is toggled
   useEffect(() => {
     if (!showRaw || raw !== null) return
     let cancelled = false
     setLoadingRaw(true)
     projectApi
-      .getCompileLogRaw(projectId, failure.error_id)
-      .then((text) => {
-        if (!cancelled) setRaw(text)
+      .getCompileLog(projectId, failure.error_id)
+      .then((detail) => {
+        if (!cancelled) setRaw(detail.log)
+      })
+      .catch(() => {
+        if (!cancelled) setRaw("Failed to load raw log.")
       })
       .finally(() => {
         if (!cancelled) setLoadingRaw(false)
@@ -59,8 +59,8 @@ export function CompileErrorPanel({
           <AlertTriangle className="text-destructive size-3.5 shrink-0" />
           <span className="truncate">
             {isTimeout
-              ? "Kompilasi melebihi batas waktu (kemungkinan loop tak berujung)"
-              : (failure.message ?? "Kompilasi gagal")}
+              ? "Compilation timed out (possible infinite loop or missing package)"
+              : (failure.message ?? "Compilation failed")}
           </span>
         </span>
         <div className="flex shrink-0 items-center gap-1">
@@ -70,9 +70,9 @@ export function CompileErrorPanel({
             onClick={() => setShowRaw((v) => !v)}
           >
             <Terminal />
-            {showRaw ? "Ringkasan" : "Log mentah"}
+            {showRaw ? "Summary" : "Raw log"}
           </Button>
-          <Button variant="ghost" size="icon-sm" aria-label="Tutup" onClick={onClose}>
+          <Button variant="ghost" size="icon-sm" aria-label="Close" onClick={onClose}>
             <X />
           </Button>
         </div>
@@ -83,11 +83,11 @@ export function CompileErrorPanel({
           {loadingRaw ? (
             <div className="text-muted-foreground flex items-center justify-center gap-2 p-4 text-xs">
               <Spinner />
-              Memuat log…
+              Loading log…
             </div>
           ) : (
             <pre className="p-3 text-xs whitespace-pre-wrap">
-              {raw && raw.length > 0 ? raw : "Log tidak tersedia."}
+              {raw && raw.length > 0 ? raw : "Log not available."}
             </pre>
           )}
         </ScrollArea>
@@ -111,7 +111,7 @@ export function CompileErrorPanel({
             ))}
             {errors.length === 0 && warnings.length === 0 && (
               <li className="text-muted-foreground p-3 text-xs">
-                {failure.message || "Tidak ada detail error."}
+                {failure.message || "No error details available."}
               </li>
             )}
           </ul>

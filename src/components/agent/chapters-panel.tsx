@@ -51,15 +51,15 @@ import {
 import { cn } from "@/lib/utils"
 
 const REVIEWER_LABEL: Record<string, string> = {
-  math_reviewer: "Reviewer matematika",
-  pedagogy_reviewer: "Reviewer pedagogi",
-  editorial: "Editorial",
+  math_reviewer: "Math Reviewer",
+  pedagogy_reviewer: "Pedagogy Reviewer",
+  editorial: "Editorial Reviewer",
 }
 
 const VERDICT_LABEL: Record<string, string> = {
-  pass: "Lulus",
-  revise: "Perlu revisi",
-  uncertain: "Belum pasti",
+  pass: "Passed",
+  revise: "Needs Revision",
+  uncertain: "Uncertain",
 }
 
 const VERDICT_CLASS: Record<string, string> = {
@@ -80,7 +80,7 @@ interface ChaptersPanelProps {
   book: AgentBook | null
   runs: AgentRun[]
   onRefresh: () => Promise<void>
-  /** Dipanggil setelah approve agar dialog memantau run applying. */
+  /** Callback after approval so the dialog can monitor the applying run. */
   onApprove: (runId: string) => void
 }
 
@@ -184,7 +184,7 @@ export function ChaptersPanel({
       } catch (err) {
         if (cancelled) return
         setDetailError(
-          err instanceof Error ? err.message : "Gagal memuat detail bab"
+          err instanceof Error ? err.message : "Failed to load chapter details"
         )
       } finally {
         if (!cancelled) setDetailLoading(false)
@@ -214,12 +214,12 @@ export function ChaptersPanel({
         brief: { focus: chapter.title },
       })
       setExpandedChapterId(chapter.id)
-      toast.success("Penulisan bab dimulai", {
+      toast.success("Chapter drafting started", {
         description: chapter.title,
       })
       await onRefresh()
     } catch (err) {
-      toast.error("Gagal memulai penulisan bab", {
+      toast.error("Failed to start chapter drafting", {
         description: err instanceof Error ? err.message : undefined,
       })
     } finally {
@@ -231,10 +231,10 @@ export function ChaptersPanel({
     setCancellingRunId(run.id)
     try {
       await agentApi.cancelRun(projectId, run.id)
-      toast.success("Permintaan pembatalan dikirim")
+      toast.success("Cancellation requested")
       await onRefresh()
     } catch (err) {
-      toast.error("Gagal membatalkan run", {
+      toast.error("Failed to cancel run", {
         description: err instanceof Error ? err.message : undefined,
       })
     } finally {
@@ -249,21 +249,21 @@ export function ChaptersPanel({
       if (decision === "approve") {
         await agentApi.approveRun(projectId, expandedRun.id, notes.trim())
         onApprove(expandedRun.id)
-        toast.success("Draf bab disetujui", {
+        toast.success("Chapter draft approved", {
           description:
-            "Agent menerapkan file ke project lalu mengompilasi dokumen.",
+            "The agent is applying files to your project and recompiling the document.",
         })
       } else {
         await agentApi.rejectRun(projectId, expandedRun.id, notes.trim())
-        toast.success("Draf bab ditolak", {
-          description: "Bab dapat dijalankan ulang setelah diperbaiki.",
+        toast.success("Chapter draft rejected", {
+          description: "The chapter can be re-run after making adjustments.",
         })
       }
       setNotes("")
       await onRefresh()
     } catch (err) {
       toast.error(
-        decision === "approve" ? "Gagal menyetujui draf" : "Gagal menolak draf",
+        decision === "approve" ? "Failed to approve draft" : "Failed to reject draft",
         { description: err instanceof Error ? err.message : undefined }
       )
     } finally {
@@ -275,9 +275,9 @@ export function ChaptersPanel({
     return (
       <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed p-8 text-center">
         <BookOpen className="text-muted-foreground size-6" />
-        <p className="text-sm font-medium">Outline buku belum ada</p>
+        <p className="text-sm font-medium">No book outline yet</p>
         <p className="text-muted-foreground max-w-sm text-xs">
-          Susun dan setujui outline buku di tab Buku sebelum menulis bab.
+          Create and approve a book outline in the Book tab before drafting chapters.
         </p>
       </div>
     )
@@ -288,7 +288,7 @@ export function ChaptersPanel({
       {activeRun && activeRun.scope !== "chapter" && (
         <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
           <span className="text-muted-foreground text-xs">
-            Run penyusunan buku sedang berjalan.
+            Book outline generation is currently running.
           </span>
           <RunStatusBadge status={activeRun.status} className="ml-auto" />
         </div>
@@ -348,14 +348,14 @@ export function ChaptersPanel({
                     />
                   ) : (
                     <p className="text-muted-foreground text-xs">
-                      Bab ini belum pernah dijalankan.
+                      This chapter has not been run yet.
                     </p>
                   )}
 
                   {run?.status === "failed" && run.error_code === "compile_failed" && (
                     <p className="text-muted-foreground text-xs">
-                      File bab sudah diterapkan, tetapi kompilasi gagal.
-                      Perbaiki project secara manual lalu kompilasi ulang.
+                      Chapter files were applied, but compilation failed.
+                      Please inspect the project source and recompile.
                     </p>
                   )}
 
@@ -363,9 +363,9 @@ export function ChaptersPanel({
                     chapter.status === "applied" ||
                     chapter.status === "compiled") && (
                       <p className="text-muted-foreground text-xs">
-                        Bab sudah diterapkan ke project
+                        Chapter applied to project
                         {run?.finished_at
-                          ? ` pada ${formatDateTime(run.finished_at)}`
+                          ? ` on ${formatDateTime(run.finished_at)}`
                           : ""}
                         .
                       </p>
@@ -376,7 +376,7 @@ export function ChaptersPanel({
                       <Separator />
                       {detailLoading ? (
                         <p className="text-muted-foreground flex items-center gap-2 text-xs">
-                          <Spinner /> Memuat draf dan tinjauan…
+                          <Spinner /> Loading draft and reviews…
                         </p>
                       ) : detailError ? (
                         <p className="text-destructive text-xs" role="alert">
@@ -388,14 +388,14 @@ export function ChaptersPanel({
                             <DraftView draft={draft} />
                           ) : (
                             <p className="text-muted-foreground text-xs">
-                              Draf bab belum tersedia.
+                              Chapter draft is not available yet.
                             </p>
                           )}
 
                           {(detail?.reviews.length ?? 0) > 0 && (
                             <div className="flex flex-col gap-2">
                               <h4 className="text-xs font-medium">
-                                Hasil tinjauan
+                                Review findings
                               </h4>
                               {detail?.reviews
                                 .slice()
@@ -413,12 +413,12 @@ export function ChaptersPanel({
 
                           <Field>
                             <FieldLabel htmlFor={`notes-${chapter.id}`}>
-                              Catatan (opsional)
+                              Notes (optional)
                             </FieldLabel>
                             <Textarea
                               id={`notes-${chapter.id}`}
                               rows={2}
-                              placeholder="Catatan persetujuan atau alasan penolakan"
+                              placeholder="Approval notes or reasons for revision"
                               value={notes}
                               onChange={(event) => setNotes(event.target.value)}
                             />
@@ -431,7 +431,7 @@ export function ChaptersPanel({
                               disabled={deciding !== null || !draft}
                             >
                               {deciding === "approve" ? <Spinner /> : <Check />}
-                              Setujui & terapkan
+                              Approve & apply
                             </Button>
                             <Button
                               size="sm"
@@ -440,7 +440,7 @@ export function ChaptersPanel({
                               disabled={deciding !== null}
                             >
                               {deciding === "reject" ? <Spinner /> : <X />}
-                              Tolak
+                              Reject
                             </Button>
                           </div>
                         </>
@@ -451,7 +451,7 @@ export function ChaptersPanel({
                   {run && isActiveRun(run.status) && run.status !== "queued" && (
                     <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
                       <Spinner className="size-3" />
-                      Agent sedang bekerja. Anda dapat menutup dialog ini.
+                      The agent is working. You can close this dialog safely.
                     </p>
                   )}
 
@@ -463,23 +463,23 @@ export function ChaptersPanel({
                       disabled={!canStart || startingId === chapter.id}
                       title={
                         activeRun
-                          ? "Selesaikan run aktif terlebih dahulu"
+                          ? "Wait for the active run to finish"
                           : undefined
                       }
                     >
                       {startingId === chapter.id ? <Spinner /> : <Play />}
                       {chapter.status === "compiled"
-                        ? "Tulis ulang bab"
-                        : "Jalankan bab"}
+                        ? "Re-draft chapter"
+                        : "Draft chapter"}
                     </Button>
                     {activeRun && (
                       <span className="text-muted-foreground text-xs">
-                        Satu run aktif per project.
+                        One active run per project.
                       </span>
                     )}
                     {chapter.status === "waiting_review" && (
                       <span className="text-muted-foreground text-xs">
-                        Setujui atau tolak draf terlebih dahulu.
+                        Approve or reject the draft first.
                       </span>
                     )}
                   </div>
@@ -502,15 +502,15 @@ function DraftView({ draft }: { draft: ChapterDraft }) {
           <p className="text-muted-foreground mt-0.5 text-xs">{draft.summary}</p>
         )}
         <p className="text-muted-foreground mt-1 text-[11px]">
-          {draft.files.length} file ·{" "}
-          {draft.citations?.length ?? 0} sitasi
+          {draft.files.length} {draft.files.length === 1 ? "file" : "files"} ·{" "}
+          {draft.citations?.length ?? 0} citations
         </p>
       </div>
 
       {draft.open_questions && draft.open_questions.length > 0 && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5">
           <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
-            Pertanyaan terbuka
+            Open questions
           </p>
           <ul className="text-muted-foreground mt-1 list-disc space-y-0.5 pl-4 text-xs">
             {draft.open_questions.map((question, index) => (
@@ -574,7 +574,7 @@ function ReviewCard({ review }: { review: AgentReview }) {
         </Badge>
         {typeof review.score === "number" && (
           <span className="text-muted-foreground text-[11px]">
-            Skor {review.score.toFixed(2)}
+            Score: {review.score.toFixed(2)}
           </span>
         )}
       </div>
@@ -602,7 +602,7 @@ function ReviewCard({ review }: { review: AgentReview }) {
                 )}
                 {issue.suggestion && (
                   <span className="text-muted-foreground block">
-                    Saran: {issue.suggestion}
+                    Suggestion: {issue.suggestion}
                   </span>
                 )}
               </span>
@@ -610,7 +610,7 @@ function ReviewCard({ review }: { review: AgentReview }) {
           ))}
         </ul>
       ) : (
-        <p className="text-muted-foreground mt-1 text-xs">Tidak ada temuan.</p>
+        <p className="text-muted-foreground mt-1 text-xs">No issues found.</p>
       )}
     </div>
   )

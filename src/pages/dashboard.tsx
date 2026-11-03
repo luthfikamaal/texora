@@ -18,7 +18,6 @@ import {
   loadSession,
 } from "@/lib/session"
 
-/** Placeholder setelah login. Nanti diganti dashboard sungguhan. */
 export function DashboardPage() {
   const navigate = useNavigate()
   const [user, setUser] = useState<User | null>(null)
@@ -66,7 +65,7 @@ export function DashboardPage() {
       try {
         await authApi.logout(session.tokens.refresh_token)
       } catch {
-        // Logout lokal tetap jalan walau API gagal (endpoint-nya idempoten).
+        // Local logout proceeds even if API fails (endpoint is idempotent).
       }
     }
     clearSession()
@@ -81,12 +80,12 @@ export function DashboardPage() {
           <CardDescription>
             {loading ? (
               <span className="inline-flex items-center gap-2">
-                <Loader2 className="size-3.5 animate-spin" /> Memuat profil…
+                <Loader2 className="size-3.5 animate-spin" /> Loading profile…
               </span>
             ) : user ? (
-              `Halo, ${user.display_name || user.email}`
+              `Hello, ${user.display_name || user.email}`
             ) : (
-              "Sesi tidak valid"
+              "Invalid session"
             )}
           </CardDescription>
         </CardHeader>
@@ -102,16 +101,16 @@ export function DashboardPage() {
                 <dd className="truncate font-mono text-xs">{user.id}</dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Email terverifikasi</dt>
+                <dt className="text-muted-foreground">Email verified</dt>
                 <dd className="font-medium">
-                  {user.email_verified ? "Ya" : "Belum"}
+                  {user.email_verified ? "Yes" : "No"}
                 </dd>
               </div>
             </dl>
           )}
           <Button variant="outline" onClick={handleLogout} className="mt-2">
             <LogOut />
-            Keluar
+            Log out
           </Button>
         </CardContent>
       </Card>

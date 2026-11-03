@@ -1,7 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
-import { cn } from "cn"
+import { cn } from "@/lib/utils"
 
 /**
  * CSS variable architecture:

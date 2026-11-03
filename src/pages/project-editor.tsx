@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,
   Download,
@@ -292,37 +292,30 @@ export function ProjectEditorPage({ user }: { user: User }) {
     [],
   );
 
-  if (!project) {
+    if (loadError) {
     return (
       <div className="bg-muted/30 flex h-svh flex-col overflow-hidden">
         <AppHeader user={user} fluid />
         <main className="flex min-h-0 flex-1 items-center justify-center p-4">
           <Frame spacing="xs" className="w-full max-w-md shadow-sm">
             <FramePanel fit className="bg-background p-0">
-              {loadError ? (
-                <Empty className="border-0 py-10">
-                  <EmptyHeader>
-                    <EmptyMedia variant="icon">
-                      <FileWarning />
-                    </EmptyMedia>
-                    <EmptyTitle>Project tidak dapat dibuka</EmptyTitle>
-                    <EmptyDescription>{loadError}</EmptyDescription>
-                  </EmptyHeader>
-                  <EmptyContent>
-                    <Button variant="outline" asChild>
-                      <Link to="/projects">
-                        <ArrowLeft />
-                        Kembali ke project
-                      </Link>
-                    </Button>
-                  </EmptyContent>
-                </Empty>
-              ) : (
-                <div className="text-muted-foreground flex min-h-52 items-center justify-center gap-2 text-sm">
-                  <Spinner className="size-5" />
-                  Memuat project…
-                </div>
-              )}
+              <Empty className="border-0 py-10">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <FileWarning />
+                  </EmptyMedia>
+                  <EmptyTitle>Unable to open project</EmptyTitle>
+                  <EmptyDescription>{loadError}</EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button variant="outline" asChild>
+                    <Link to="/projects">
+                      <ArrowLeft />
+                      Back to projects
+                    </Link>
+                  </Button>
+                </EmptyContent>
+              </Empty>
             </FramePanel>
           </Frame>
         </main>
@@ -349,7 +342,7 @@ export function ProjectEditorPage({ user }: { user: User }) {
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-medium">{project.name}</p>
+                  <p className="truncate text-sm font-medium">{project?.name ?? "Loading project…"}</p>
                   {dirty && (
                     <Badge
                       variant="outline"
@@ -473,7 +466,7 @@ export function ProjectEditorPage({ user }: { user: User }) {
                 <FileTree
                   files={files}
                   activePath={activePath}
-                  mainFile={project.main_file}
+                  mainFile={project?.main_file ?? ""}
                   onDownload={(p) => {
                     projectApi.downloadRaw(projectId, p).catch((err) => {
                       handleError(err, "Gagal mengunduh file");
@@ -538,12 +531,21 @@ export function ProjectEditorPage({ user }: { user: User }) {
                     }}
                   />
                 ) : activePath ? (
-                  <LatexEditor
-                    value={content}
-                    onChange={setContent}
-                    dark={document.documentElement.classList.contains("dark")}
-                    gotoLine={pendingLine}
-                  />
+                  <Suspense
+                    fallback={
+                      <div className="text-muted-foreground flex h-full items-center justify-center gap-2 text-sm">
+                        <Spinner />
+                        Loading editor…
+                      </div>
+                    }
+                  >
+                    <LatexEditor
+                      value={content}
+                      onChange={setContent}
+                      dark={document.documentElement.classList.contains("dark")}
+                      gotoLine={pendingLine}
+                    />
+                  </Suspense>
                 ) : (
                   <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
                     Pilih file untuk mulai mengedit.
@@ -563,12 +565,21 @@ export function ProjectEditorPage({ user }: { user: User }) {
 
             {/* Preview */}
             <FramePanel className="hidden min-h-0 min-w-0 flex-col p-0 lg:flex">
-              <PdfPreview
-                projectId={projectId}
-                version={pdfVersion}
-                fetchPdf={fetchPdf}
-                compiling={compiling}
-              />
+              <Suspense
+                fallback={
+                  <div className="text-muted-foreground flex h-full items-center justify-center gap-2 text-sm">
+                    <Spinner />
+                    Loading preview…
+                  </div>
+                }
+              >
+                <PdfPreview
+                  projectId={projectId}
+                  version={pdfVersion}
+                  fetchPdf={fetchPdf}
+                  compiling={compiling}
+                />
+              </Suspense>
             </FramePanel>
           </div>
         </Frame>

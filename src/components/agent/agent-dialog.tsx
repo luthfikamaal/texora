@@ -1,11 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import {
-  BookOpen,
-  Library,
-  ListOrdered,
-  Loader2,
-  RefreshCw,
-} from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { BookOpen, Library, ListOrdered, Loader2, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 
 import { BookPanel } from "@/components/agent/book-panel"
@@ -21,7 +15,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ApiError } from "@/lib/api"
 import { agentApi } from "@/lib/agent-api"
 import {
   isActiveRun,
@@ -30,18 +23,18 @@ import {
   type AgentRunStatus,
   type AgentSource,
 } from "@/lib/agent-types"
+import { ApiError } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
-type AgentTab = "book" | "sources" | "chapters"
-
-interface AgentDialogProps {
+export interface AgentDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
   projectName: string
-  /** Dipanggil setelah bab selesai diterapkan/dikompilasi. */
-  onApplied: () => void | Promise<void>
+  onApplied: () => Promise<void> | void
 }
+
+type AgentTab = "book" | "sources" | "chapters"
 
 export function AgentDialog({
   open,
@@ -81,7 +74,7 @@ export function AgentDialog({
         loadedRef.current = true
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Gagal memuat data agent"
+          err instanceof Error ? err.message : "Failed to load agent data"
         )
       } finally {
         setLoading(false)
@@ -109,8 +102,8 @@ export function AgentDialog({
       if (!approved) continue
       if (run.status === "completed") {
         pendingApplyRef.current = null
-        toast.success("Bab diterapkan ke project", {
-          description: "File dan hasil kompilasi telah diperbarui.",
+        toast.success("Chapter applied to project", {
+          description: "Files and compilation have been refreshed.",
         })
         void onApplied()
       } else if (run.status === "failed") {
@@ -118,20 +111,16 @@ export function AgentDialog({
         void onApplied()
       }
     }
-    previousStatusRef.current = new Map(
-      runs.map((run) => [run.id, run.status])
-    )
-  }, [open, runs, onApplied])
+    const map = new Map<string, AgentRunStatus>()
+    for (const run of runs) map.set(run.id, run.status)
+    previousStatusRef.current = map
+  }, [runs, open, onApplied])
 
-  const shouldPoll = useMemo(
-    () =>
-      runs.some((run) => isActiveRun(run.status)) ||
-      sources.some(
-        (source) =>
-          source.status === "pending" || source.status === "extracting"
-      ),
-    [runs, sources]
-  )
+  const shouldPoll = runs.some((run) => {
+    if (isActiveRun(run.status)) return true
+    if (run.scope === "chapter" && run.status === "waiting_review") return true
+    return false
+  })
 
   useEffect(() => {
     if (!open || !shouldPoll) return
@@ -154,15 +143,15 @@ export function AgentDialog({
             <BookOpen className="size-4" />
           </div>
           <div className="mr-auto min-w-0">
-            <DialogTitle className="text-sm font-semibold">Buku Ajar</DialogTitle>
+            <DialogTitle className="text-sm font-semibold">Book Agent</DialogTitle>
             <DialogDescription className="truncate text-xs">
-              {projectName} · Agent penulisan buku
+              {projectName} · Academic authoring agent
             </DialogDescription>
           </div>
           {shouldPoll && (
             <span className="text-muted-foreground hidden items-center gap-1.5 text-xs sm:flex">
               <Loader2 className="size-3 animate-spin" aria-hidden="true" />
-              Memproses
+              Processing
             </span>
           )}
           <Button
@@ -170,8 +159,8 @@ export function AgentDialog({
             size="icon-sm"
             onClick={() => void load(true)}
             disabled={refreshing}
-            aria-label="Muat ulang data agent"
-            title="Muat ulang"
+            aria-label="Refresh agent data"
+            title="Refresh"
           >
             <RefreshCw className={cn(refreshing && "animate-spin")} />
           </Button>
@@ -186,11 +175,11 @@ export function AgentDialog({
             <TabsList>
               <TabsTrigger value="book">
                 <BookOpen />
-                Buku
+                Book
               </TabsTrigger>
               <TabsTrigger value="sources">
                 <Library />
-                Sumber
+                Sources
                 {sources.length > 0 && (
                   <Badge
                     variant="secondary"
@@ -203,7 +192,7 @@ export function AgentDialog({
               </TabsTrigger>
               <TabsTrigger value="chapters">
                 <ListOrdered />
-                Bab
+                Chapters
                 {waitingReviews > 0 && (
                   <Badge
                     className="h-4 bg-amber-500 px-1 text-[10px] text-white"
@@ -284,7 +273,7 @@ export function AgentDialog({
 
         {active && (
           <p className="text-muted-foreground border-t px-4 py-2 text-[11px] sm:px-5">
-            Agent berjalan di latar belakang. Perubahan tersimpan otomatis.
+            The agent runs in the background. Changes are saved automatically.
           </p>
         )}
       </DialogContent>
@@ -294,7 +283,7 @@ export function AgentDialog({
 
 function AgentSkeleton() {
   return (
-    <div className="flex flex-col gap-3" aria-label="Memuat data agent">
+    <div className="flex flex-col gap-3" aria-label="Loading agent data">
       <div className="bg-muted h-20 animate-pulse rounded-lg" />
       <div className="bg-muted h-10 w-2/3 animate-pulse rounded-lg" />
       <div className="bg-muted h-32 animate-pulse rounded-lg" />

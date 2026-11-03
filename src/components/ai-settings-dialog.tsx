@@ -55,7 +55,7 @@ export function AiSettingsDialog({
         setError(
           err instanceof ApiError
             ? err.message
-            : "Pengaturan AI tidak dapat dimuat."
+            : "Failed to load AI settings."
         )
       } finally {
         if (!cancelled) setLoading(false)
@@ -79,18 +79,18 @@ export function AiSettingsDialog({
       setStatus(res.settings)
       setAPIKey("")
       setClearAPIKey(false)
-      toast.success("Pengaturan AI disimpan")
+      toast.success("AI settings saved")
       if (!res.settings.enabled) {
-        toast("Lengkapi base URL, model, dan API key untuk mengaktifkan AI.")
+        toast("Please provide base URL, model, and API key to enable AI assistance.")
       }
       onOpenChange(false)
     } catch (err) {
       if (err instanceof ApiError) {
-        toast.error("Gagal menyimpan pengaturan AI", {
+        toast.error("Failed to save AI settings", {
           description: err.message,
         })
       } else {
-        toast.error("Gagal menyimpan pengaturan AI")
+        toast.error("Failed to save AI settings")
       }
     } finally {
       setSaving(false)
@@ -101,22 +101,22 @@ export function AiSettingsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Pengaturan AI</DialogTitle>
+          <DialogTitle>AI Settings</DialogTitle>
           <DialogDescription>
-            Konfigurasi provider AI untuk akun Anda. API key disimpan
-            terenkripsi dan tidak pernah ditampilkan kembali.
+            Configure custom AI provider settings for your account. API keys are
+            stored encrypted and never exposed.
           </DialogDescription>
         </DialogHeader>
 
         {loading ? (
           <div className="text-muted-foreground flex items-center justify-center gap-2 py-8 text-sm">
             <Spinner className="size-4" />
-            Memuat pengaturan…
+            Loading settings…
           </div>
         ) : error ? (
           <Alert variant="destructive">
             <AlertCircle />
-            <AlertTitle>Pengaturan tidak dapat dimuat</AlertTitle>
+            <AlertTitle>Failed to load settings</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : (
@@ -130,7 +130,7 @@ export function AiSettingsDialog({
             {status?.warning && (
               <Alert variant="destructive">
                 <AlertCircle />
-                <AlertTitle>Konfigurasi bermasalah</AlertTitle>
+                <AlertTitle>Configuration Warning</AlertTitle>
                 <AlertDescription>{status.warning}</AlertDescription>
               </Alert>
             )}
@@ -146,7 +146,7 @@ export function AiSettingsDialog({
                 spellCheck={false}
               />
               <p className="text-muted-foreground text-[11px]">
-                Endpoint OpenAI-compatible, biasanya berakhiran{" "}
+                OpenAI-compatible endpoint, typically ending in{" "}
                 <code>/v1</code>.
               </p>
             </div>
@@ -172,7 +172,7 @@ export function AiSettingsDialog({
                 onChange={(e) => setAPIKey(e.target.value)}
                 placeholder={
                   status?.has_api_key
-                    ? "Tersimpan — isi untuk mengganti"
+                    ? "Configured — enter new key to replace"
                     : "sk-..."
                 }
                 autoComplete="new-password"
@@ -180,8 +180,8 @@ export function AiSettingsDialog({
               />
               <p className="text-muted-foreground text-[11px]">
                 {status?.has_api_key
-                  ? "Biarkan kosong untuk mempertahankan API key yang tersimpan."
-                  : "API key wajib diisi agar asisten aktif."}
+                  ? "Leave blank to keep your existing API key."
+                  : "An API key is required to activate AI assistance."}
               </p>
             </div>
 
@@ -193,18 +193,18 @@ export function AiSettingsDialog({
                     setClearAPIKey(value === true)
                   }
                 />
-                Hapus API key tersimpan
+                Remove saved API key
               </label>
             )}
 
             <div className="bg-muted/40 flex flex-wrap items-center gap-2 rounded-lg border p-2.5 text-xs">
               <Badge variant={status?.enabled ? "default" : "outline"}>
-                {status?.enabled ? "Aktif" : "Nonaktif"}
+                {status?.enabled ? "Enabled" : "Disabled"}
               </Badge>
               <span className="text-muted-foreground">
                 {status?.source === "db"
-                  ? "Tersimpan di akun"
-                  : "Belum disimpan di akun"}
+                  ? "Saved to account"
+                  : "Not saved to account"}
               </span>
               {status?.provider && (
                 <span className="text-muted-foreground ml-auto font-mono text-[10px]">
@@ -220,11 +220,11 @@ export function AiSettingsDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={saving}
               >
-                Batal
+                Cancel
               </Button>
               <Button type="submit" disabled={saving}>
                 {saving && <Spinner className="size-3.5" />}
-                Simpan
+                Save changes
               </Button>
             </div>
           </form>

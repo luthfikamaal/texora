@@ -64,20 +64,20 @@ export function SourcesPanel({
   async function handleFile(file: File | undefined) {
     if (!file) return
     if (!file.name.toLowerCase().endsWith(".pdf")) {
-      toast.error("Format tidak didukung", {
-        description: "Sumber harus berupa PDF digital.",
+      toast.error("Unsupported file format", {
+        description: "Sources must be valid digital PDF files.",
       })
       return
     }
     setUploading(true)
     try {
       await agentApi.uploadSourcePDF(projectId, file)
-      toast.success("PDF ditambahkan", {
-        description: "Ekstraksi teks berjalan di latar belakang.",
+      toast.success("PDF source added", {
+        description: "Text extraction is running in the background.",
       })
       await onRefresh()
     } catch (err) {
-      toast.error("Gagal mengunggah PDF", {
+      toast.error("Failed to upload PDF", {
         description: err instanceof Error ? err.message : undefined,
       })
     } finally {
@@ -95,8 +95,8 @@ export function SourcesPanel({
         throw new Error("protocol")
       }
     } catch {
-      toast.error("URL tidak valid", {
-        description: "Gunakan URL lengkap yang diawali http:// atau https://.",
+      toast.error("Invalid URL", {
+        description: "Please enter a valid URL starting with http:// or https://.",
       })
       return
     }
@@ -104,10 +104,10 @@ export function SourcesPanel({
     try {
       await agentApi.addSourceURL(projectId, value)
       setUrl("")
-      toast.success("URL sumber ditambahkan")
+      toast.success("URL source added")
       await onRefresh()
     } catch (err) {
-      toast.error("Gagal menambahkan URL", {
+      toast.error("Failed to add URL source", {
         description: err instanceof Error ? err.message : undefined,
       })
     } finally {
@@ -120,11 +120,11 @@ export function SourcesPanel({
     setDeleting(true)
     try {
       await agentApi.deleteSource(projectId, pendingDelete.id)
-      toast.success("Sumber dihapus")
+      toast.success("Source removed")
       setPendingDelete(null)
       await onRefresh()
     } catch (err) {
-      toast.error("Gagal menghapus sumber", {
+      toast.error("Failed to delete source", {
         description: err instanceof Error ? err.message : undefined,
       })
     } finally {
@@ -140,10 +140,9 @@ export function SourcesPanel({
             <FileText className="size-4" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-sm font-medium">Sumber referensi</h3>
+            <h3 className="text-sm font-medium">Reference Sources</h3>
             <p className="text-muted-foreground text-xs">
-              PDF digital atau halaman web. Teks sumber dipakai agent saat
-              menulis bab.
+              Digital PDFs or web articles used by the AI agent as citations and background research.
             </p>
           </div>
           <div className="ml-auto">
@@ -161,7 +160,7 @@ export function SourcesPanel({
               disabled={uploading}
             >
               {uploading ? <Spinner /> : <Upload />}
-              <span className="hidden sm:inline">Unggah PDF</span>
+              <span className="hidden sm:inline">Upload PDF</span>
               <span className="sm:hidden">PDF</span>
             </Button>
           </div>
@@ -175,13 +174,13 @@ export function SourcesPanel({
           }}
         >
           <label htmlFor="agent-source-url" className="sr-only">
-            URL sumber
+            Source URL
           </label>
           <Input
             id="agent-source-url"
             type="url"
             inputMode="url"
-            placeholder="https://contoh.com/artikel"
+            placeholder="https://example.com/article"
             value={url}
             onChange={(event) => setUrl(event.target.value)}
             disabled={addingUrl}
@@ -192,21 +191,20 @@ export function SourcesPanel({
             disabled={addingUrl || !url.trim()}
           >
             {addingUrl ? <Spinner /> : <Plus />}
-            Tambah
+            Add
           </Button>
         </form>
         <p className="text-muted-foreground text-[11px]">
-          Maksimal 25 MB per PDF. PDF hasil pindai belum didukung (butuh teks
-          digital).
+          Maximum 25 MB per PDF. Scanned PDFs without digital text layers are not supported.
         </p>
       </div>
 
       {sources.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed p-8 text-center">
           <Link2 className="text-muted-foreground size-6" />
-          <p className="text-sm font-medium">Belum ada sumber</p>
+          <p className="text-sm font-medium">No sources added yet</p>
           <p className="text-muted-foreground max-w-sm text-xs">
-            Tambahkan minimal satu sumber agar chapter dapat mengutip referensi.
+            Add at least one reference source so chapters can cite and incorporate factual context.
           </p>
         </div>
       ) : (
@@ -229,14 +227,13 @@ export function SourcesPanel({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus sumber?</AlertDialogTitle>
+            <AlertDialogTitle>Remove source?</AlertDialogTitle>
             <AlertDialogDescription>
-              “{pendingDelete?.title}” beserta chunk teksnya akan dihapus dari
-              project. Tindakan ini tidak bisa dibatalkan.
+              “{pendingDelete?.title}” and its extracted text chunks will be deleted. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Batal</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               disabled={deleting}
               onClick={(event) => {
@@ -245,7 +242,7 @@ export function SourcesPanel({
               }}
             >
               {deleting ? <Spinner /> : null}
-              Hapus
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -288,7 +285,7 @@ function SourceRow({
         <div className="text-muted-foreground mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]">
           <span>{formatBytes(source.size_bytes)}</span>
           {source.status === "ready" && (
-            <span>{source.chunk_count} potongan teks</span>
+            <span>{source.chunk_count} text chunks</span>
           )}
           {source.bibtex_key && <span>{source.bibtex_key}</span>}
         </div>
@@ -304,7 +301,7 @@ function SourceRow({
             <AlertCircle className="mt-0.5 size-3 shrink-0" />
             <span>
               {source.error_message ||
-                "PDF tampaknya hasil pindai. Unggah versi dengan teks digital."}
+                "PDF appears to be a scanned image. Please upload a version containing selectable digital text."}
             </span>
           </p>
         )}
@@ -314,8 +311,8 @@ function SourceRow({
         size="icon-sm"
         className="text-muted-foreground hover:text-destructive shrink-0"
         onClick={onDelete}
-        aria-label={`Hapus sumber ${source.title}`}
-        title="Hapus sumber"
+        aria-label={`Remove source ${source.title}`}
+        title="Remove source"
       >
         <Trash2 />
       </Button>

@@ -17,21 +17,19 @@ import type { FileMeta } from "@/lib/project-types"
 import { isEditablePath, isImagePath } from "@/lib/project-types"
 
 /**
- * Item tree: folder yang dibentuk dari path, atau file dari API.
- * `children` berisi id anak-anaknya.
+ * Tree entry representing a folder or file item.
  */
 type TreeEntry = {
   id: string
   name: string
   isFolder: boolean
-  /** path penuh untuk file; undefined untuk folder */
   path?: string
   children?: string[]
 }
 
 const ROOT_ID = "__root__"
 
-/** Ubah daftar path datar ("bab/bab1.tex") menjadi struktur folder. */
+/** Transform flat file list into hierarchical directory tree. */
 function buildTree(files: FileMeta[]) {
   const entries = new Map<string, TreeEntry>()
   entries.set(ROOT_ID, {
@@ -69,7 +67,7 @@ function buildTree(files: FileMeta[]) {
     entries.get(parentId)!.children!.push(file.path)
   }
 
-  // Folder dulu, lalu urut nama.
+  // Folders first, then alphabetical
   for (const entry of entries.values()) {
     entry.children?.sort((a, b) => {
       const ea = entries.get(a)
@@ -122,7 +120,7 @@ export function FileTree({
     dataLoader: {
       getItem: (id) => {
         const entry = entries.get(id)
-        if (!entry) throw new Error(`tree item tidak ditemukan: ${id}`)
+        if (!entry) throw new Error(`Tree item not found: ${id}`)
         return entry
       },
       getChildren: (id) => entries.get(id)?.children ?? [],
@@ -174,8 +172,8 @@ export function FileTree({
                   <Button
                     variant="ghost"
                     size="icon-xs"
-                    aria-label={`Unduh ${entry.path}`}
-                    title={`Unduh ${entry.path}`}
+                    aria-label={`Download ${entry.path}`}
+                    title={`Download ${entry.path}`}
                     onClick={(e) => {
                       e.stopPropagation()
                       onDownload(entry.path!)

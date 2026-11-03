@@ -18,19 +18,19 @@ import { Spinner } from "@/components/ui/spinner"
 import { ApiError } from "@/lib/api"
 import { EDITABLE_EXTENSIONS } from "@/lib/project-types"
 
-const TEX_TEMPLATE = `\\section{Judul Bagian}
-Tulis isi bagian di sini.
+const TEX_TEMPLATE = `\\section{Section Title}
+Write section content here.
 `
 
 const schema = z.object({
   path: z
     .string()
     .trim()
-    .min(1, "Path wajib diisi")
-    .max(200, "Path maksimal 200 karakter")
+    .min(1, "File path is required")
+    .max(200, "Maximum 200 characters")
     .refine(
       (v) => EDITABLE_EXTENSIONS.some((ext) => v.toLowerCase().endsWith(ext)),
-      { message: `Ekstensi harus salah satu: ${EDITABLE_EXTENSIONS.join(", ")}` }
+      { message: `Extension must be one of: ${EDITABLE_EXTENSIONS.join(", ")}` }
     )
     .refine(
       (v) =>
@@ -38,7 +38,7 @@ const schema = z.object({
           .split("/")
           .every((seg) => seg.length > 0 && /^[A-Za-z0-9._-]+$/.test(seg)) &&
         !v.includes(".."),
-      { message: "Hanya huruf, angka, titik, minus, garis bawah, dan /" }
+      { message: "Only letters, numbers, dots, hyphens, underscores, and / allowed" }
     ),
 })
 
@@ -65,7 +65,7 @@ export function SaveFileDialog({
   const onSubmit = form.handleSubmit(async (values) => {
     setFormError(null)
     if (existingPaths.includes(values.path)) {
-      form.setError("path", { message: "File dengan path ini sudah ada" })
+      form.setError("path", { message: "A file with this path already exists" })
       return
     }
     try {
@@ -83,7 +83,7 @@ export function SaveFileDialog({
         setFormError(err.message)
         return
       }
-      setFormError("Tidak dapat terhubung ke server.")
+      setFormError("Unable to connect to the server.")
     }
   })
 
@@ -93,23 +93,23 @@ export function SaveFileDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>File baru</DialogTitle>
+          <DialogTitle>New file</DialogTitle>
           <DialogDescription>
-            Gunakan <code>folder/nama.tex</code> untuk file di dalam folder.
+            Use forward slashes like <code>chapters/intro.tex</code> to create folders automatically.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
           <Field data-invalid={!!errors.path}>
-            <FieldLabel htmlFor="file-path">Path file</FieldLabel>
+            <FieldLabel htmlFor="file-path">File path</FieldLabel>
             <Input
               id="file-path"
-              placeholder="bab/bab1.tex"
+              placeholder="chapters/section1.tex"
               aria-invalid={!!errors.path}
               {...form.register("path")}
             />
             <FieldDescription>
-              Ekstensi: {EDITABLE_EXTENSIONS.join(", ")}
+              Supported extensions: {EDITABLE_EXTENSIONS.join(", ")}
             </FieldDescription>
             <FieldError>{errors.path?.message}</FieldError>
           </Field>
@@ -126,11 +126,11 @@ export function SaveFileDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Batal
+              Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Spinner />}
-              Buat file
+              Create file
             </Button>
           </DialogFooter>
         </form>

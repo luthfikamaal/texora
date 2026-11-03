@@ -15,18 +15,12 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Spinner } from "@/components/ui/spinner"
 
-// Worker pdf.js diambil dari paket pdfjs-dist (Vite akan mem-bundle sebagai aset).
+// pdf.js worker bundled from pdfjs-dist via Vite
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url
 ).toString()
 
-/**
- * Preview PDF memakai react-pdf — bukan <iframe>.
- *
- * Chrome mengabaikan `#toolbar=0`, jadi viewer bawaan browser selalu
- * menampilkan toolbar. Render sendiri menghilangkan itu sepenuhnya.
- */
 export function PdfPreview({
   projectId,
   version,
@@ -34,7 +28,6 @@ export function PdfPreview({
   compiling,
 }: {
   projectId: string
-  /** Naikkan angka ini untuk memaksa ambil ulang setelah compile. */
   version: number
   fetchPdf: (id: string, signal?: AbortSignal) => Promise<string>
   compiling: boolean
@@ -47,7 +40,6 @@ export function PdfPreview({
   const [width, setWidth] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Lebar kontainer untuk menyesuaikan ukuran halaman.
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -59,7 +51,6 @@ export function PdfPreview({
     return () => observer.disconnect()
   }, [url])
 
-  // Ambil PDF sebagai blob URL.
   useEffect(() => {
     let cancelled = false
     let created: string | null = null
@@ -78,7 +69,7 @@ export function PdfPreview({
         setUrl(objectUrl)
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Gagal memuat PDF")
+          setError(err instanceof Error ? err.message : "Failed to load PDF preview")
           setUrl(null)
         }
       } finally {
@@ -90,14 +81,11 @@ export function PdfPreview({
 
     return () => {
       cancelled = true
-      // Hentikan unduhan lama supaya tidak menumpuk dan menghabiskan
-      // koneksi saat compile berikutnya selesai.
       controller.abort()
       if (created) URL.revokeObjectURL(created)
     }
   }, [projectId, version, fetchPdf])
 
-  // Reset zoom setiap PDF baru.
   useEffect(() => {
     setScale(1)
     setNumPages(0)
@@ -109,7 +97,7 @@ export function PdfPreview({
     return (
       <div className="text-muted-foreground flex h-full items-center justify-center gap-2 text-sm">
         <Spinner />
-        {compiling ? "Mengompilasi…" : "Memuat PDF…"}
+        {compiling ? "Compiling document…" : "Rendering PDF…"}
       </div>
     )
   }
@@ -121,84 +109,77 @@ export function PdfPreview({
           <EmptyMedia variant="icon">
             <FileWarning />
           </EmptyMedia>
-          <EmptyTitle>Belum ada PDF</EmptyTitle>
+          <EmptyTitle>No compiled PDF yet</EmptyTitle>
           <EmptyDescription>
-            {error ?? "Kompilasi project untuk melihat hasilnya di sini."}
+            {error ?? "Click the Compile button in the top toolbar to build this document."}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
     )
   }
 
-  // Lebar halaman mengikuti kontainer, dikali zoom pengguna.
-  const pageWidth = width > 0 ? Math.min(width - 32, 820) * scale : undefined
-
   return (
     <div className="flex h-full flex-col">
-      {/* Toolbar milik kita sendiri */}
-      <div className="bg-muted/40 flex shrink-0 items-center justify-between gap-2 border-b px-2 py-1">
-        <span className="text-muted-foreground pl-1 text-xs">
-          {numPages > 0 ? `${numPages} halaman` : "PDF"}
+      <div className="border-border/60 bg-background/80 flex items-center justify-between border-b px-3 py-1.5 text-xs">
+        <span className="text-muted-foreground">
+          {numPages > 0 ? `${numPages} page${numPages > 1 ? "s" : ""}` : "Loading…"}
         </span>
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-1">
           <Button
             variant="ghost"
-            size="icon-sm"
-            aria-label="Perkecil"
+            size="icon-xs"
+            onClick={() => setScale((s) => Math.max(0.5, s - 0.1))}
             disabled={scale <= 0.5}
-            onClick={() => setScale((s) => Math.max(0.5, +(s - 0.15).toFixed(2)))}
+            aria-label="Zoom out"
           >
-            <Minus />
+            <Minus className="size-3.5" />
           </Button>
-          <span className="text-muted-foreground w-10 text-center text-xs tabular-nums">
+          <span className="w-12 text-center tabular-nums">
             {Math.round(scale * 100)}%
           </span>
           <Button
             variant="ghost"
-            size="icon-sm"
-            aria-label="Perbesar"
-            disabled={scale >= 3}
-            onClick={() => setScale((s) => Math.min(3, +(s + 0.15).toFixed(2)))}
+            size="icon-xs"
+            onClick={() => setScale((s) => Math.min(2.5, s + 0.1))}
+            disabled={scale >= 2.5}
+            aria-label="Zoom in"
           >
-            <Plus />
+            <Plus className="size-3.5" />
           </Button>
         </div>
       </div>
 
-      <div
-        ref={containerRef}
-        className="bg-muted/20 min-h-0 flex-1 overflow-hidden"
-      >
-        <ScrollArea className="h-full">
+      <ScrollArea className="flex-1">
+        <div ref={containerRef} className="flex flex-col items-center gap-4 p-4">
           <Document
             file={file}
-            suspense={false}
-            onLoadSuccess={({ numPages: n }) => setNumPages(n)}
-            onLoadError={(err) =>
-              setError(err?.message ?? "PDF tidak dapat dibaca")
-            }
+            onLoadSuccess={({ numPages: total }) => setNumPages(total)}
             loading={
-              <div className="text-muted-foreground flex h-32 items-center justify-center gap-2 text-sm">
+              <div className="text-muted-foreground flex items-center justify-center gap-2 py-8 text-xs">
                 <Spinner />
-                Memuat PDF…
+                Reading pages…
               </div>
             }
-            className="flex flex-col items-center gap-3 p-4"
+            error={
+              <div className="text-destructive py-8 text-xs">
+                Unable to display this PDF. Please try recompiling.
+              </div>
+            }
           >
-            {Array.from({ length: numPages }, (_, i) => (
+            {Array.from({ length: numPages }, (_, index) => (
               <Page
-                key={`p-${i + 1}`}
-                pageNumber={i + 1}
-                width={pageWidth}
-                suspense={false}
-                className="overflow-hidden rounded-sm bg-white shadow-sm"
-                renderAnnotationLayer={false}
-                renderTextLayer={false}
+                key={`page_${index + 1}`}
+                pageNumber={index + 1}
+                scale={scale}
+                width={width > 0 ? Math.min(width - 32, 800) : undefined}
+                className="shadow-sm"
+                renderAnnotationLayer
+                renderTextLayer
               />
             ))}
           </Document>
-        </ScrollArea>
-      </div>
+        </div>
+      </ScrollArea>
     </div>
   )
 }

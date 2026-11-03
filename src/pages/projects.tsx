@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react"
+﻿import { useEffect, useState } from "react"
 import { formatDistanceToNow } from "date-fns"
-import { id as localeId } from "date-fns/locale"
 import { Eye, FileText, MoreHorizontal, Plus, Trash2, Upload } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
 import { AppHeader } from "@/components/app-header"
+import { IconTile } from "@/components/reui/icon-tile"
 import { CreateProjectDialog } from "@/components/create-project-dialog"
 import { ImportProjectDialog } from "@/components/import-project-dialog"
 import {
@@ -44,7 +44,6 @@ function relative(date: string) {
   try {
     return formatDistanceToNow(new Date(date), {
       addSuffix: true,
-      locale: localeId,
     })
   } catch {
     return date
@@ -118,7 +117,7 @@ export function ProjectsPage({ user }: { user: User }) {
           navigate("/login", { replace: true })
           return
         }
-        toast.error("Gagal memuat project", {
+        toast.error("Failed to load projects", {
           description: err instanceof ApiError ? err.message : undefined,
         })
         setProjects([])
@@ -136,10 +135,10 @@ export function ProjectsPage({ user }: { user: User }) {
       setProjects((prev) =>
         prev ? prev.filter((p) => p.id !== pendingDelete.id) : prev,
       )
-      toast.success("Project dihapus")
+      toast.success("Project deleted")
       setPendingDelete(null)
     } catch (err) {
-      toast.error("Gagal menghapus project", {
+      toast.error("Failed to delete project", {
         description: err instanceof ApiError ? err.message : undefined,
       })
     } finally {
@@ -155,13 +154,13 @@ export function ProjectsPage({ user }: { user: User }) {
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl font-semibold tracking-tight">Project</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
               {projects !== null && (
                 <Badge variant="secondary">{projects.length}</Badge>
               )}
             </div>
             <p className="text-muted-foreground text-sm">
-              Dokumen LaTeX milikmu.
+              Manage and craft your LaTeX documents.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -171,7 +170,7 @@ export function ProjectsPage({ user }: { user: User }) {
             </Button>
             <Button onClick={() => setCreateOpen(true)}>
               <Plus />
-              Project baru
+              New project
             </Button>
           </div>
         </div>
@@ -184,17 +183,17 @@ export function ProjectsPage({ user }: { user: User }) {
               <EmptyMedia>
                 <ProjectsIllustration />
               </EmptyMedia>
-              <EmptyTitle>Belum ada project</EmptyTitle>
+              <EmptyTitle>No projects yet</EmptyTitle>
               <EmptyDescription>
-                Project yang kamu buat akan muncul di sini. Mulai dari project
-                kosong atau impor file .zip yang sudah ada.
+                Your projects will show up here. Start with a fresh project or
+                import an existing project archive (.zip).
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
               <div className="flex flex-wrap justify-center gap-2">
                 <Button onClick={() => setCreateOpen(true)}>
                   <Plus />
-                  Project baru
+                  New project
                 </Button>
                 <Button variant="outline" onClick={() => setImportOpen(true)}>
                   <Upload />
@@ -210,9 +209,9 @@ export function ProjectsPage({ user }: { user: User }) {
                 key={p.id}
                 className="hover:bg-muted/50 relative flex items-center gap-4 px-4 py-3 transition-colors"
               >
-                <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-md">
-                  <FileText className="size-4" />
-                </span>
+                <IconTile variant="frame" size="default">
+                  <FileText />
+                </IconTile>
 
                 <div className="min-w-0 flex-1">
                   <Link
@@ -222,15 +221,15 @@ export function ProjectsPage({ user }: { user: User }) {
                     {p.name}
                   </Link>
                   <p className="text-muted-foreground truncate text-sm">
-                    {p.description || "Tanpa deskripsi"}
+                    {p.description || "No description"}
                   </p>
                   <p className="text-muted-foreground mt-1 text-xs sm:hidden">
-                    {p.file_count} file · {relative(p.files_updated_at)}
+                    {p.file_count} {p.file_count === 1 ? "file" : "files"} · {relative(p.files_updated_at)}
                   </p>
                 </div>
 
                 <div className="text-muted-foreground hidden shrink-0 flex-col items-end gap-0.5 text-xs sm:flex">
-                  <span>{p.file_count} file</span>
+                  <span>{p.file_count} {p.file_count === 1 ? "file" : "files"}</span>
                   <span>{relative(p.files_updated_at)}</span>
                 </div>
 
@@ -240,7 +239,7 @@ export function ProjectsPage({ user }: { user: User }) {
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        aria-label="Aksi project"
+                        aria-label="Project actions"
                       >
                         <MoreHorizontal />
                       </Button>
@@ -248,8 +247,8 @@ export function ProjectsPage({ user }: { user: User }) {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
                         <Link to={`/projects/${p.id}`}>
-                        <Eye />
-                          Buka
+                          <Eye />
+                          Open
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem
@@ -257,7 +256,7 @@ export function ProjectsPage({ user }: { user: User }) {
                         onSelect={() => setPendingDelete(p)}
                       >
                         <Trash2 />
-                        Hapus
+                        Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -274,7 +273,7 @@ export function ProjectsPage({ user }: { user: User }) {
         onCreate={async (values) => {
           const res = await projectApi.create(values)
           setProjects((prev) => [res.project, ...(prev ?? [])])
-          toast.success("Project dibuat")
+          toast.success("Project created")
           navigate(`/projects/${res.project.id}`)
           return res.project
         }}
@@ -286,9 +285,9 @@ export function ProjectsPage({ user }: { user: User }) {
         onImport={async (file, name, description) => {
           const res = await projectApi.importZip(file, name, description)
           setProjects((prev) => [res.project, ...(prev ?? [])])
-          toast.success("Project diimpor", {
-            description: `${res.files_total} file · ${(res.total_bytes / 1024).toFixed(0)} KB${
-              res.files_skipped > 0 ? ` · ${res.files_skipped} dilewati` : ""
+          toast.success("Project imported", {
+            description: `${res.files_total} files · ${(res.total_bytes / 1024).toFixed(0)} KB${
+              res.files_skipped > 0 ? ` · ${res.files_skipped} skipped` : ""
             }`,
           })
           navigate(`/projects/${res.project.id}`)
@@ -302,14 +301,13 @@ export function ProjectsPage({ user }: { user: User }) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus project?</AlertDialogTitle>
+            <AlertDialogTitle>Delete project?</AlertDialogTitle>
             <AlertDialogDescription>
-              “{pendingDelete?.name}” akan dihapus beserta seluruh filenya.
-              Tindakan ini tidak bisa dibatalkan.
+              “{pendingDelete?.name}” and all of its files will be permanently removed. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Batal</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               disabled={deleting}
               onClick={(e) => {
@@ -317,7 +315,7 @@ export function ProjectsPage({ user }: { user: User }) {
                 void handleDelete()
               }}
             >
-              Hapus
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

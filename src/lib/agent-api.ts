@@ -16,7 +16,7 @@ import { getValidAccessToken } from "./session"
 async function requireToken(): Promise<string> {
   const token = await getValidAccessToken()
   if (!token) {
-    throw new ApiError(401, "unauthorized", "Sesi berakhir, silakan masuk lagi")
+    throw new ApiError(401, "unauthorized", "Session expired, please sign in again")
   }
   return token
 }
@@ -40,12 +40,9 @@ export const agentApi = {
     })
   },
 
-  async listRuns(projectId: string, limit = 30) {
+  async listRuns(projectId: string) {
     const token = await requireToken()
-    return apiFetch<AgentRunListResponse>(
-      `${base(projectId)}/runs?limit=${limit}`,
-      { token }
-    )
+    return apiFetch<AgentRunListResponse>(`${base(projectId)}/runs`, { token })
   },
 
   async getRun(projectId: string, runId: string) {
@@ -59,6 +56,11 @@ export const agentApi = {
       method: "POST",
       token,
     })
+  },
+
+  async getBook(projectId: string) {
+    const token = await requireToken()
+    return apiFetch<AgentBookResponse>(`${base(projectId)}/book`, { token })
   },
 
   async listArtifacts(projectId: string, runId: string) {
@@ -91,7 +93,7 @@ export const agentApi = {
       `${runBase(projectId, runId)}/approve`,
       {
         method: "POST",
-        body: JSON.stringify({ notes: notes ?? "" }),
+        body: JSON.stringify(notes ? { notes } : {}),
         token,
       }
     )
@@ -103,42 +105,48 @@ export const agentApi = {
       `${runBase(projectId, runId)}/reject`,
       {
         method: "POST",
-        body: JSON.stringify({ notes: notes ?? "" }),
+        body: JSON.stringify(notes ? { notes } : {}),
         token,
       }
     )
   },
 
-  async getBook(projectId: string) {
+  async listSources(projectId: string) {
     const token = await requireToken()
-    return apiFetch<AgentBookResponse>(`${base(projectId)}/book`, { token })
-  },
-
-  async listSources(projectId: string, limit = 100) {
-    const token = await requireToken()
-    return apiFetch<AgentSourceListResponse>(
-      `${base(projectId)}/sources?limit=${limit}`,
-      { token }
-    )
-  },
-
-  async addSourceURL(projectId: string, url: string) {
-    const token = await requireToken()
-    return apiFetch<AgentSourceResponse>(`${base(projectId)}/sources/url`, {
-      method: "POST",
-      body: JSON.stringify({ url }),
+    return apiFetch<AgentSourceListResponse>(`${base(projectId)}/sources`, {
       token,
     })
   },
 
-  async uploadSourcePDF(projectId: string, file: File) {
+  async addSourceURL(projectId: string, url: string, title?: string) {
+    const token = await requireToken()
+    return apiFetch<AgentSourceResponse>(`${base(projectId)}/sources`, {
+      method: "POST",
+      body: JSON.stringify({
+        kind: "url",
+        url,
+        ...(title ? { title } : {}),
+      }),
+      token,
+    })
+  },
+
+  async uploadSourcePDF(
+    projectId: string,
+    file: File,
+    title?: string
+  ): Promise<AgentSourceResponse> {
     const token = await requireToken()
     const form = new FormData()
     form.append("file", file)
+    if (title?.trim()) form.append("title", title.trim())
 
-    const res = await fetch(`${API_BASE_URL}${base(projectId)}/sources/pdf`, {
+    const res = await fetch(`${API_BASE_URL}${base(projectId)}/sources`, {
       method: "POST",
-      headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: form,
     })
 
@@ -161,7 +169,7 @@ export const agentApi = {
       throw new ApiError(
         res.status,
         envelope.error?.code ?? "upload_failed",
-        envelope.error?.message ?? `Unggah PDF gagal (${res.status})`,
+        envelope.error?.message ?? `Failed to upload PDF (${res.status})`,
         envelope.error?.fields
       )
     }

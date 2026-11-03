@@ -65,24 +65,24 @@ type Props = {
 }
 
 const EXAMPLES = [
-  "Periksa struktur LaTeX dan tunjukkan bagian yang berisiko error.",
-  "Rapikan tabel di file utama tanpa mengubah isinya.",
-  "Buat soal latihan baru sebagai file terpisah.",
+  "Inspect document structure and point out potential syntax or compilation errors.",
+  "Format and clean up tables in the main document without changing the content.",
+  "Draft a new set of practice exercises as a separate file.",
 ]
 
 const STATUS_LABEL: Record<AiProposalStatus, string> = {
-  pending: "Menunggu",
-  applied: "Diterapkan",
-  rejected: "Ditolak",
-  failed: "Gagal",
-  superseded: "Tidak berlaku",
-  undone: "Dibatalkan",
+  pending: "Pending",
+  applied: "Applied",
+  rejected: "Rejected",
+  failed: "Failed",
+  superseded: "Superseded",
+  undone: "Reverted",
 }
 
 const ACTION_LABEL = {
-  create: "Baru",
-  update: "Ubah",
-  delete: "Hapus",
+  create: "New",
+  update: "Modify",
+  delete: "Delete",
 } as const
 
 const ACTION_MARK = {
@@ -193,7 +193,7 @@ export function AiAssistantDialog({
         setError(
           err instanceof ApiError
             ? err.message
-            : "Asisten AI tidak dapat dimuat. Coba lagi."
+            : "Failed to load AI Assistant. Please try again."
         )
       } finally {
         if (!cancelled) setLoading(false)
@@ -257,12 +257,12 @@ export function AiAssistantDialog({
         }
       })
     } catch (err) {
-      notifyError(err, "Gagal mengirim pesan ke AI")
+      notifyError(err, "Failed to send message to AI")
       if (threadId) {
         try {
           await loadThread(threadId, true)
         } catch {
-          // biarkan pesan error utama tampil
+          // preserve the primary error message
         }
       }
     } finally {
@@ -274,9 +274,9 @@ export function AiAssistantDialog({
   async function handleProposal(action: "apply" | "undo", p: AiProposal) {
     if (busyProposal) return
     if (action === "apply" && hasUnsavedChanges) {
-      toast.error("Simpan perubahan editor dulu", {
+      toast.error("Please save your editor changes first", {
         description:
-          "Ada perubahan belum disimpan. Simpan agar usulan AI tidak menimpa pekerjaan Anda.",
+          "You have unsaved changes. Save them before applying AI proposals to prevent conflicts.",
       })
       return
     }
@@ -285,10 +285,10 @@ export function AiAssistantDialog({
     try {
       if (action === "apply") {
         await aiApi.applyProposal(projectId, p.id)
-        toast.success("Usulan AI diterapkan")
+        toast.success("AI proposal applied")
       } else {
         await aiApi.undoProposal(projectId, p.id)
-        toast.success("Perubahan AI dibatalkan")
+        toast.success("AI changes reverted")
       }
       await onFilesChanged()
       await loadThread(thread.id, true)
@@ -296,7 +296,7 @@ export function AiAssistantDialog({
     } catch (err) {
       notifyError(
         err,
-        action === "apply" ? "Gagal menerapkan usulan" : "Gagal membatalkan usulan"
+        action === "apply" ? "Failed to apply proposal" : "Failed to revert proposal"
       )
     } finally {
       setBusyProposal(null)
@@ -311,7 +311,7 @@ export function AiAssistantDialog({
       await loadThread(thread.id, true)
       scrollToBottom()
     } catch (err) {
-      notifyError(err, "Gagal membuat jawaban baru")
+      notifyError(err, "Failed to generate new response")
     } finally {
       setRegenerating(null)
     }
@@ -319,15 +319,15 @@ export function AiAssistantDialog({
 
   async function handleDeleteThread() {
     if (!thread || busyProposal || sending) return
-    const ok = window.confirm("Hapus percakapan ini beserta riwayatnya?")
+    const ok = window.confirm("Delete this conversation and its entire history?")
     if (!ok) return
     try {
       await aiApi.deleteThread(projectId, thread.id)
       setThread(null)
       setInput("")
-      toast.success("Percakapan dihapus")
+      toast.success("Conversation deleted")
     } catch (err) {
-      notifyError(err, "Gagal menghapus percakapan")
+      notifyError(err, "Failed to delete conversation")
     }
   }
 
@@ -357,7 +357,7 @@ export function AiAssistantDialog({
                 </>
               ) : null}
               <span className="truncate">
-                {status?.enabled ? status.model || "Aktif" : "Belum dikonfigurasi"}
+                {status?.enabled ? status.model || "Active" : "Not configured"}
               </span>
             </DialogDescription>
           </div>
@@ -368,8 +368,8 @@ export function AiAssistantDialog({
               size="icon-sm"
               onClick={() => void handleDeleteThread()}
               disabled={sending}
-              aria-label="Hapus percakapan"
-              title="Hapus percakapan"
+              aria-label="Delete conversation"
+              title="Delete conversation"
             >
               <Trash2 />
             </Button>
@@ -379,7 +379,7 @@ export function AiAssistantDialog({
         <div
           ref={scrollRef}
           className="scrollbar-thin min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6"
-          aria-label="Riwayat percakapan"
+          aria-label="Conversation history"
         >
           <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
             {loading || loadingThread ? (
@@ -388,7 +388,7 @@ export function AiAssistantDialog({
               <div className="flex items-start gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-sm">
                 <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" />
                 <div>
-                  <p className="font-medium">Percakapan tidak dapat dimuat</p>
+                  <p className="font-medium">Failed to load conversation</p>
                   <p className="mt-1 text-muted-foreground">{error}</p>
                 </div>
               </div>
@@ -396,18 +396,18 @@ export function AiAssistantDialog({
               <div className="mx-auto mt-6 w-full max-w-md rounded-2xl border bg-card p-5">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <Settings2 className="size-4" />
-                  Asisten AI belum aktif
+                  AI Assistant is inactive
                 </div>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Isi provider AI untuk akun Anda. API key disimpan terenkripsi
-                  dan tidak ditampilkan lagi.
+                  Configure an AI provider for your account. API keys are stored encrypted
+                  and never displayed again.
                 </p>
                 {status.warning && (
                   <p className="mt-2 text-xs text-destructive">{status.warning}</p>
                 )}
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Buka menu akun di kanan atas, lalu pilih{" "}
-                  <strong className="font-medium text-foreground">Pengaturan AI</strong>.
+                  Open the account menu in the top right, then select{" "}
+                  <strong className="font-medium text-foreground">AI Settings</strong>.
                 </p>
               </div>
             ) : messages.length === 0 ? (
@@ -455,12 +455,12 @@ export function AiAssistantDialog({
                 }}
                 placeholder={
                   status?.enabled
-                    ? "Tanya tentang project, atau jelaskan perubahan yang kamu mau…"
-                    : "Atur provider AI untuk mulai"
+                    ? "Ask questions about your project, or describe the edits you would like to make…"
+                    : "Configure an AI provider to get started"
                 }
                 className="max-h-40 min-h-20 resize-none border-0 bg-transparent px-3.5 pt-3 pb-1 shadow-none focus-visible:ring-0"
                 disabled={disabled}
-                aria-label="Pesan untuk asisten AI"
+                aria-label="Message for AI assistant"
               />
               <div className="flex items-center gap-2 px-2.5 pb-2.5">
                 <Badge
@@ -478,22 +478,22 @@ export function AiAssistantDialog({
                   LaTeX
                 </Badge>
                 <span className="ml-auto hidden text-[10px] text-muted-foreground sm:block">
-                  Enter kirim · Shift+Enter baris baru
+                  Enter to send · Shift+Enter for new line
                 </span>
                 <Button
                   size="icon"
                   className="ml-auto size-8 rounded-full sm:ml-0"
                   onClick={() => void handleSend()}
                   disabled={disabled || !input.trim()}
-                  aria-label="Kirim pesan"
-                  title="Kirim (Enter)"
+                  aria-label="Send message"
+                  title="Send (Enter)"
                 >
                   {sending ? <Spinner /> : <ArrowUp />}
                 </Button>
               </div>
             </div>
             <p className="mt-2 text-[10px] text-muted-foreground">
-              AI bisa membuat kesalahan. Periksa usulan sebelum menerapkan.
+              AI can make mistakes. Please verify proposed changes before applying.
             </p>
           </div>
         </div>
@@ -504,7 +504,7 @@ export function AiAssistantDialog({
 
 function ConversationSkeleton() {
   return (
-    <div className="flex flex-col gap-6" role="status" aria-label="Memuat percakapan">
+    <div className="flex flex-col gap-6" role="status" aria-label="Loading conversation">
       <div className="flex items-start gap-3">
         <AssistantAvatar />
         <div className="w-full space-y-2 pt-1">
@@ -538,11 +538,10 @@ function EmptyConversation({
     <div className="flex flex-col items-start gap-4 py-6 sm:py-10">
       <AssistantAvatar className="size-10" />
       <div className="max-w-lg">
-        <h3 className="text-base font-semibold">Mulai dari project ini</h3>
+        <h3 className="text-base font-semibold">How can I help with this document?</h3>
         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-          Tanya isi {projectName ? projectName : "project"}, cari kesalahan LaTeX,
-          atau minta perubahan. AI hanya mengubah file setelah kamu menyetujui
-          usulannya.
+          Ask questions about {projectName ? projectName : "your project"}, detect LaTeX errors,
+          or request code updates. The AI only modifies files after you approve its proposals.
         </p>
       </div>
       <div className="grid w-full gap-2 sm:grid-cols-2">
@@ -655,7 +654,7 @@ function ConversationMessage({
               ) : (
                 <RefreshCw className="size-3" />
               )}
-              {isError ? "Coba lagi" : "Regenerate"}
+              {isError ? "Retry" : "Regenerate"}
             </Button>
           </MessageFooter>
         )}
@@ -669,7 +668,7 @@ function ThinkingMessage() {
     <div
       className="flex items-start gap-3"
       role="status"
-      aria-label="AI sedang menyusun jawaban"
+      aria-label="AI is drafting a response"
     >
       <AssistantAvatar />
       <div className="flex h-8 items-center gap-1.5">
@@ -806,7 +805,7 @@ function AssistantText({ text }: { text: string }) {
           return (
             <CodeBlock key={index} size="sm">
               <CodeBlockHeader>
-                <CodeBlockTitle>{part.language || "kode"}</CodeBlockTitle>
+                <CodeBlockTitle>{part.language || "code"}</CodeBlockTitle>
                 <CodeBlockActions>
                   <CodeBlockCopyButton value={part.content} />
                 </CodeBlockActions>
@@ -881,16 +880,16 @@ function ProposalCard({
   const title =
     proposal.operations.length === 1
       ? proposal.operations[0].path
-      : `${proposal.operations.length} file`
+      : `${proposal.operations.length} ${proposal.operations.length === 1 ? "file" : "files"}`
 
   async function copyPaths() {
     try {
       await navigator.clipboard.writeText(
         proposal.operations.map((op) => op.path).join("\n")
       )
-      toast.success("Path file disalin")
+      toast.success("File paths copied")
     } catch {
-      toast.error("Gagal menyalin path file")
+      toast.error("Failed to copy file paths")
     }
   }
 
@@ -921,8 +920,8 @@ function ProposalCard({
               variant="ghost"
               size="icon-xs"
               onClick={() => void copyPaths()}
-              aria-label="Salin path file"
-              title="Salin path file"
+              aria-label="Copy file paths"
+              title="Copy file paths"
             >
               <Copy />
             </Button>
@@ -979,11 +978,11 @@ function ProposalCard({
         <div className="flex min-h-10 items-center justify-between gap-2 border-t bg-muted/15 px-3 py-2">
           <span className="text-[10px] text-muted-foreground">
             {proposal.status === "pending"
-              ? "Belum ada file yang berubah."
+              ? "No files have been modified yet."
               : proposal.status === "applied"
-                ? "Perubahan sudah diterapkan."
+                ? "Changes applied to project."
                 : proposal.status === "undone"
-                  ? "Perubahan sudah dibatalkan."
+                  ? "Changes have been reverted."
                   : STATUS_LABEL[proposal.status]}
           </span>
 
@@ -991,7 +990,7 @@ function ProposalCard({
             <div className="flex items-center gap-2">
               {hasUnsavedChanges && (
                 <span className="text-[10px] text-amber-600 dark:text-amber-400">
-                  Simpan editor dulu
+                  Save editor first
                 </span>
               )}
               <Button
@@ -1001,7 +1000,7 @@ function ProposalCard({
                 disabled={busy || hasUnsavedChanges}
               >
                 {busy ? <Spinner className="size-3" /> : <Check className="size-3" />}
-                Terapkan
+                Apply
               </Button>
             </div>
           )}
@@ -1015,7 +1014,7 @@ function ProposalCard({
               disabled={busy}
             >
               {busy ? <Spinner className="size-3" /> : <Undo2 className="size-3" />}
-              Batalkan
+              Revert
             </Button>
           )}
         </div>

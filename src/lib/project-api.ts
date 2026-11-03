@@ -17,16 +17,16 @@ import type {
 } from "./project-types"
 import { getValidAccessToken } from "./session"
 
-/** Ambil access token valid, atau lempar ApiError 401. */
+/** Retrieve valid access token or throw ApiError 401. */
 async function requireToken(): Promise<string> {
   const token = await getValidAccessToken()
   if (!token) {
-    throw new ApiError(401, "unauthorized", "Sesi berakhir, silakan masuk lagi")
+    throw new ApiError(401, "unauthorized", "Session expired, please sign in again")
   }
   return token
 }
 
-/** Path file perlu di-encode per segmen agar `bab/bab1.tex` tetap valid. */
+/** Encode path segments so nested files like `chapters/intro.tex` remain valid. */
 function encodePath(path: string): string {
   return path
     .split("/")
@@ -57,19 +57,31 @@ export const projectApi = {
     })
   },
 
-  /** Daftar template bawaan server (tanpa isi file). */
+  /** Public template list provided by server. */
   async listTemplates() {
-    const token = await requireToken()
-    return apiFetch<TemplateListResponse>("/api/v1/templates", { token })
+    const token = await getValidAccessToken()
+    return apiFetch<TemplateListResponse>("/api/v1/templates", {
+      ...(token ? { token } : {}),
+    })
   },
 
-  /** Detail template beserta isi file untuk pratinjau. */
+  /** Template details with source file content and preview metadata. */
   async getTemplate(id: string) {
-    const token = await requireToken()
+    const token = await getValidAccessToken()
     return apiFetch<TemplateResponse>(
       `/api/v1/templates/${encodeURIComponent(id)}`,
-      { token }
+      { ...(token ? { token } : {}) }
     )
+  },
+
+  /** Resolves absolute URL for template preview image or PDF */
+  getTemplateAssetUrl(relativePath?: string): string | null {
+    if (!relativePath) return null
+    if (relativePath.startsWith("http://") || relativePath.startsWith("https://")) {
+      return relativePath
+    }
+    const clean = relativePath.startsWith("/") ? relativePath : `/${relativePath}`
+    return `${API_BASE_URL}${clean}`
   },
 
   async get(id: string) {
@@ -92,9 +104,7 @@ export const projectApi = {
   },
 
   /**
-   * Import project dari file .zip (multipart, field `file`).
-   * `name`/`description` opsional — server menambah suffix " (2)" bila bentrok.
-   * Content-Type sengaja tidak di-set agar browser menambahkan boundary.
+   * Import project from a .zip archive (multipart, `file` field).
    */
   async importZip(
     file: File,
@@ -128,7 +138,7 @@ export const projectApi = {
       throw new ApiError(
         res.status,
         envelope.error?.code ?? "import_failed",
-        envelope.error?.message ?? `Import gagal (${res.status})`,
+        envelope.error?.message ?? `Import failed (${res.status})`,
         envelope.error?.fields
       )
     }
@@ -137,9 +147,7 @@ export const projectApi = {
   },
 
   /**
-   * Unduh file mentah (biner) via /raw/{path}, misalnya gambar .png untuk
-   * project LaTeX. Endpoint butuh header Authorization sehingga tidak bisa
-   * dipakai langsung sebagai `src`.
+   * Fetch binary asset object URL via /raw/{path}.
    */
   async fetchRawObjectUrl(
     id: string,
@@ -154,8 +162,8 @@ export const projectApi = {
         res.status,
         "raw_unavailable",
         res.status === 404
-          ? "File tidak ditemukan"
-          : `Gagal mengambil file (${res.status})`
+          ? "File not found"
+          : `Failed to fetch file (${res.status})`
       )
     }
     const blob = await res.blob()
@@ -165,7 +173,7 @@ export const projectApi = {
     }
   },
 
-  /** Unduh file mentah langsung sebagai file (trigger download browser). */
+  /** Download raw file directly to browser. */
   async downloadRaw(id: string, path: string): Promise<void> {
     const token = await requireToken()
     const res = await fetch(`${API_BASE_URL}${base(id)}/raw/${encodePath(path)}`, {
@@ -176,8 +184,8 @@ export const projectApi = {
         res.status,
         "raw_unavailable",
         res.status === 404
-          ? "File tidak ditemukan"
-          : `Gagal mengunduh file (${res.status})`
+          ? "File not found"
+          : `Failed to download file (${res.status})`
       )
     }
     const blob = await res.blob()
@@ -191,7 +199,7 @@ export const projectApi = {
     URL.revokeObjectURL(url)
   },
 
-  /** Unduh PDF hasil kompilasi terakhir (nama file: <project>.pdf). */
+  /** Download compiled PDF artifact. */
   async downloadPdf(id: string, filename = "document.pdf"): Promise<void> {
     const token = await requireToken()
     const res = await fetch(`${API_BASE_URL}${base(id)}/pdf`, {
@@ -202,8 +210,8 @@ export const projectApi = {
         res.status,
         "pdf_unavailable",
         res.status === 404
-          ? "PDF belum pernah dibuat. Kompilasi dulu."
-          : `Gagal mengunduh PDF (${res.status})`
+          ? "No compiled PDF found. Please recompile first."
+          : `Failed to download PDF (${res.status})`
       )
     }
     const blob = await res.blob()
@@ -217,8 +225,6 @@ export const projectApi = {
     URL.revokeObjectURL(url)
   },
 
-  // ---- Files ----
-
   async listFiles(id: string) {
     const token = await requireToken()
     return apiFetch<FilesResponse>(`${base(id)}/files`, { token })
@@ -231,7 +237,6 @@ export const projectApi = {
     })
   },
 
-  /** Upsert: 201 file baru, 200 diperbarui. */
   async putFile(id: string, path: string, content: string) {
     const token = await requireToken()
     return apiFetch<FileResponse>(`${base(id)}/files/${encodePath(path)}`, {
@@ -241,7 +246,7 @@ export const projectApi = {
     })
   },
 
-  async deleteFile(id: string, path: string) {
+  async removeFile(id: string, path: string) {
     const token = await requireToken()
     return apiFetch<void>(`${base(id)}/files/${encodePath(path)}`, {
       method: "DELETE",
@@ -249,67 +254,37 @@ export const projectApi = {
     })
   },
 
-  async renameFile(id: string, path: string, nextPath: string) {
+  async compile(id: string, engine?: CompileEngine) {
     const token = await requireToken()
-    return apiFetch<FileResponse>(`${base(id)}/files/${encodePath(path)}`, {
+    const qs = engine ? `?engine=${encodeURIComponent(engine)}` : ""
+    return apiFetch<CompileOk>(`${base(id)}/compile${qs}`, {
       method: "POST",
-      body: JSON.stringify({ path: nextPath }),
       token,
     })
   },
 
-  // ---- Compile ----
-
-  async compile(id: string, engine: CompileEngine = "pdflatex") {
+  async listCompileLogs(id: string, params: { limit?: number; offset?: number } = {}) {
     const token = await requireToken()
-    return apiFetch<CompileOk>(`${base(id)}/compile`, {
-      method: "POST",
-      body: JSON.stringify({ engine }),
-      token,
-    })
-  },
-
-  // ---- Compile logs ----
-
-  /** Log lengkap satu kompilasi (termasuk error terparse + log mentah). */
-  async getCompileLog(id: string, logId: string) {
-    const token = await requireToken()
-    return apiFetch<CompileLogDetail>(
-      `${base(id)}/compile-logs/${encodeURIComponent(logId)}`,
+    const q = new URLSearchParams()
+    if (params.limit != null) q.set("limit", String(params.limit))
+    if (params.offset != null) q.set("offset", String(params.offset))
+    const qs = q.toString()
+    return apiFetch<CompileLogListResponse>(
+      `${base(id)}/compile/logs${qs ? `?${qs}` : ""}`,
       { token }
     )
   },
 
-  /** Log mentah (text/plain) untuk panel terminal. */
-  async getCompileLogRaw(id: string, logId: string): Promise<string> {
+  async getCompileLog(id: string, logId: string) {
     const token = await requireToken()
-    const res = await fetch(
-      `${API_BASE_URL}${base(id)}/compile-logs/${encodeURIComponent(logId)}?raw=1`,
-      { headers: { Authorization: `Bearer ${token}` } }
+    return apiFetch<CompileLogDetail>(
+      `${base(id)}/compile/logs/${encodeURIComponent(logId)}`,
+      { token }
     )
-    if (!res.ok) return ""
-    return res.text()
-  },
-
-  /** Kompilasi terakhir — dipakai saat membuka project. 404 bila belum ada. */
-  async getLatestCompileLog(id: string) {
-    const token = await requireToken()
-    return apiFetch<CompileLogDetail>(`${base(id)}/compile-logs/latest`, {
-      token,
-    })
-  },
-
-  /** Riwayat ringkas (tanpa isi log). */
-  async listCompileLogs(id: string) {
-    const token = await requireToken()
-    return apiFetch<CompileLogListResponse>(`${base(id)}/compile-logs`, {
-      token,
-    })
   },
 
   /**
-   * Ambil PDF sebagai blob URL (iframe tidak bisa kirim header Authorization).
-   * Pemanggil wajib `URL.revokeObjectURL` saat selesai.
+   * Fetch PDF as blob URL for in-app preview iframe.
    */
   async fetchPdfObjectUrl(id: string, signal?: AbortSignal): Promise<string> {
     const token = await requireToken()
@@ -322,8 +297,8 @@ export const projectApi = {
         res.status,
         "pdf_unavailable",
         res.status === 404
-          ? "PDF belum pernah dibuat. Kompilasi dulu."
-          : `Gagal mengambil PDF (${res.status})`
+          ? "No compiled PDF found. Please recompile first."
+          : `Failed to retrieve PDF (${res.status})`
       )
       throw err
     }

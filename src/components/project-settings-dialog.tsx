@@ -31,10 +31,10 @@ const schema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, "Nama wajib diisi")
-    .max(100, "Nama maksimal 100 karakter"),
-  description: z.string().trim().max(500, "Deskripsi maksimal 500 karakter"),
-  main_file: z.string().min(1, "Pilih file utama"),
+    .min(1, "Project name is required")
+    .max(100, "Maximum 100 characters"),
+  description: z.string().trim().max(500, "Maximum 500 characters"),
+  main_file: z.string().min(1, "Select a main file"),
 })
 
 type Values = z.infer<typeof schema>
@@ -83,7 +83,7 @@ export function ProjectSettingsDialog({
         setFormError(err.message)
         return
       }
-      setFormError("Tidak dapat terhubung ke server.")
+      setFormError("Unable to connect to the server.")
     }
   })
 
@@ -94,15 +94,15 @@ export function ProjectSettingsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Pengaturan project</DialogTitle>
+          <DialogTitle>Project settings</DialogTitle>
           <DialogDescription>
-            PATCH mengirim semua field sekaligus, bukan sebagian.
+            Configure project metadata and define the root .tex compilation entrypoint.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
           <Field data-invalid={!!errors.name}>
-            <FieldLabel htmlFor="settings-name">Nama</FieldLabel>
+            <FieldLabel htmlFor="settings-name">Name</FieldLabel>
             <Input
               id="settings-name"
               aria-invalid={!!errors.name}
@@ -112,7 +112,7 @@ export function ProjectSettingsDialog({
           </Field>
 
           <Field data-invalid={!!errors.description}>
-            <FieldLabel htmlFor="settings-description">Deskripsi</FieldLabel>
+            <FieldLabel htmlFor="settings-description">Description</FieldLabel>
             <Textarea
               id="settings-description"
               rows={3}
@@ -123,14 +123,14 @@ export function ProjectSettingsDialog({
           </Field>
 
           <Field data-invalid={!!errors.main_file}>
-            <FieldLabel htmlFor="settings-main-file">File utama</FieldLabel>
+            <FieldLabel htmlFor="settings-main-file">Main document (.tex)</FieldLabel>
             <Controller
               control={form.control}
               name="main_file"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="settings-main-file" className="w-full">
-                    <SelectValue placeholder="Pilih file .tex" />
+                    <SelectValue placeholder="Select a .tex file" />
                   </SelectTrigger>
                   <SelectContent>
                     {texFiles.map((f) => (
@@ -157,11 +157,11 @@ export function ProjectSettingsDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Batal
+              Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Spinner />}
-              Simpan
+              Save changes
             </Button>
           </DialogFooter>
         </form>

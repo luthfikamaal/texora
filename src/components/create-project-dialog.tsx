@@ -43,25 +43,20 @@ import type {
   TemplateDetail,
   TemplateSummary,
 } from "@/lib/project-types"
-import { cn } from "@/lib/utils"
+import { cn, formatBytes } from "@/lib/utils"
 
 const schema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, "Nama project wajib diisi")
-    .max(100, "Nama maksimal 100 karakter"),
-  description: z.string().trim().max(500, "Deskripsi maksimal 500 karakter"),
+    .min(1, "Project name is required")
+    .max(100, "Maximum 100 characters"),
+  description: z.string().trim().max(500, "Maximum 500 characters"),
 })
 
 type Values = z.infer<typeof schema>
 
 const NO_TEMPLATE = "none"
-
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`
-  return `${(bytes / 1024).toFixed(1)} KB`
-}
 
 function TemplateOption({
   value,
@@ -151,7 +146,7 @@ export function CreateProjectDialog({
         if (cancelled) return
         setTemplates([])
         setTemplatesError(
-          err instanceof ApiError ? err.message : "Gagal memuat template",
+          err instanceof ApiError ? err.message : "Failed to load templates",
         )
       })
     return () => {
@@ -178,7 +173,7 @@ export function CreateProjectDialog({
       .catch((err) => {
         if (cancelled) return
         setPreviewError(
-          err instanceof ApiError ? err.message : "Gagal memuat pratinjau",
+          err instanceof ApiError ? err.message : "Failed to load template preview",
         )
       })
       .finally(() => {
@@ -214,12 +209,12 @@ export function CreateProjectDialog({
           setTemplatesError(err.fields.template_id)
         }
         if (err.status === 409) {
-          form.setError("name", { message: "Nama project sudah dipakai" })
+          form.setError("name", { message: "A project with this name already exists" })
         }
         setFormError(err.message)
         return
       }
-      setFormError("Tidak dapat terhubung ke server.")
+      setFormError("Unable to reach the server.")
     }
   })
 
@@ -229,10 +224,9 @@ export function CreateProjectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[90svh] max-h-[44rem] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
         <DialogHeader className="shrink-0 px-4 pt-4 pb-2">
-          <DialogTitle>Project baru</DialogTitle>
+          <DialogTitle>New project</DialogTitle>
           <DialogDescription>
-            Beri nama project, lalu pilih template awal atau mulai dari file
-            kosong.
+            Name your document workspace, then choose a starter template or begin from scratch.
           </DialogDescription>
         </DialogHeader>
 
@@ -244,10 +238,10 @@ export function CreateProjectDialog({
           <ScrollArea className="min-h-0 flex-1">
             <div className="flex flex-col gap-3 px-4 py-3">
               <Field data-invalid={!!errors.name}>
-                <FieldLabel htmlFor="project-name">Nama project</FieldLabel>
+                <FieldLabel htmlFor="project-name">Project name</FieldLabel>
                 <Input
                   id="project-name"
-                  placeholder="Skripsi Saya"
+                  placeholder="e.g. My Paper Draft"
                   aria-invalid={!!errors.name}
                   {...form.register("name")}
                 />
@@ -256,12 +250,12 @@ export function CreateProjectDialog({
 
               <Field data-invalid={!!errors.description}>
                 <FieldLabel htmlFor="project-description">
-                  Deskripsi (opsional)
+                  Description (optional)
                 </FieldLabel>
                 <Textarea
                   id="project-description"
                   rows={2}
-                  placeholder="Catatan singkat tentang project"
+                  placeholder="A few words describing this project"
                   aria-invalid={!!errors.description}
                   {...form.register("description")}
                 />
@@ -270,10 +264,10 @@ export function CreateProjectDialog({
 
               <Field>
                 <div className="flex items-center justify-between gap-2">
-                  <FieldLabel>Template</FieldLabel>
+                  <FieldLabel>Starter template</FieldLabel>
                   {templates && templates.length > 0 && (
                     <Badge variant="secondary">
-                      {templates.length} tersedia
+                      {templates.length} available
                     </Badge>
                   )}
                 </div>
@@ -281,7 +275,7 @@ export function CreateProjectDialog({
                 {templates === null ? (
                   <div className="text-muted-foreground flex h-20 items-center justify-center gap-2 rounded-lg border text-sm">
                     <Spinner />
-                    Memuat template…
+                    Loading templates…
                   </div>
                 ) : templatesError && templates.length === 0 ? (
                   <div className="flex flex-col items-center gap-2 rounded-lg border p-3 text-center">
@@ -295,7 +289,7 @@ export function CreateProjectDialog({
                       onClick={() => setTemplateReload((n) => n + 1)}
                     >
                       <RefreshCw />
-                      Coba lagi
+                      Retry
                     </Button>
                   </div>
                 ) : (
@@ -311,8 +305,8 @@ export function CreateProjectDialog({
                     >
                       <TemplateOption
                         value={NO_TEMPLATE}
-                        title="Kosong"
-                        description="Mulai dari main.tex dengan template LaTeX dasar."
+                        title="Blank Canvas"
+                        description="Start with a minimal main.tex document structure."
                         selected={templateId === NO_TEMPLATE}
                       />
                       {templates.map((t) => (
@@ -329,8 +323,8 @@ export function CreateProjectDialog({
 
                     <FieldDescription className="text-xs">
                       {templates.length === 0
-                        ? "Belum ada template. Project memakai file default."
-                        : "Template hanya menentukan isi awal; file tetap bisa diubah setelah project dibuat."}
+                        ? "No custom templates available. Project will be initialized with defaults."
+                        : "Templates only supply the initial files; you can change everything later."}
                     </FieldDescription>
 
                     {templatesError && (
@@ -349,18 +343,18 @@ export function CreateProjectDialog({
                   >
                     <div className="flex items-center justify-between gap-2 px-3 py-1.5">
                       <div className="min-w-0">
-                        <p className="text-xs font-medium">Pratinjau</p>
+                        <p className="text-xs font-medium">Source preview</p>
                         <p className="text-muted-foreground truncate text-[11px]">
                           {previewLoading
-                            ? "Memuat isi template…"
+                            ? "Loading template source…"
                             : preview
                               ? `${preview.main_file} · ${formatBytes(preview.size_bytes)}`
-                              : "Isi template"}
+                              : "Template content"}
                         </p>
                       </div>
                       <CollapsibleTrigger asChild>
                         <Button type="button" variant="ghost" size="sm">
-                          {previewOpen ? "Tutup" : "Lihat isi"}
+                          {previewOpen ? "Hide" : "Inspect code"}
                           <ChevronDown
                             className={cn(
                               "transition-transform",
@@ -375,7 +369,7 @@ export function CreateProjectDialog({
                         {previewLoading ? (
                           <div className="text-muted-foreground flex items-center justify-center gap-2 py-6 text-sm">
                             <Spinner />
-                            Memuat pratinjau…
+                            Loading preview…
                           </div>
                         ) : previewError ? (
                           <p
@@ -409,11 +403,11 @@ export function CreateProjectDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Batal
+              Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Spinner />}
-              Buat project
+              Create project
             </Button>
           </DialogFooter>
         </form>

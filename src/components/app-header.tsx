@@ -1,5 +1,5 @@
 import { FileText, LogOut } from "lucide-react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, NavLink, useNavigate } from "react-router-dom"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -14,6 +14,12 @@ import { Separator } from "@/components/ui/separator"
 import { authApi } from "@/lib/auth-api"
 import type { User } from "@/lib/auth-types"
 import { clearSession, loadSession } from "@/lib/session"
+import { cn } from "@/lib/utils"
+
+const navItems = [
+  { to: "/projects", label: "Projects" },
+  { to: "/templates", label: "Templates" },
+]
 
 export function AppHeader({
   user,
@@ -30,7 +36,7 @@ export function AppHeader({
       try {
         await authApi.logout(session.tokens.refresh_token)
       } catch {
-        // idempoten; logout lokal tetap jalan
+        // idempotent; local logout still occurs
       }
     }
     clearSession()
@@ -55,6 +61,25 @@ export function AppHeader({
           Texora
         </Link>
 
+        <nav className="ml-4 flex items-center gap-1">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                cn(
+                  "hover:text-foreground rounded-md px-2.5 py-1.5 text-sm transition-colors",
+                  isActive
+                    ? "bg-muted text-foreground font-medium"
+                    : "text-muted-foreground",
+                )
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+
         <div className="ml-auto flex items-center gap-3">
           <Separator orientation="vertical" className="h-6" />
 
@@ -73,7 +98,7 @@ export function AppHeader({
               <DropdownMenuLabel>
                 <div className="flex flex-col">
                   <span className="truncate">
-                    {user.display_name || "Tanpa nama"}
+                    {user.display_name || "Untitled User"}
                   </span>
                   <span className="text-muted-foreground truncate text-xs font-normal">
                     {user.email}
@@ -83,7 +108,7 @@ export function AppHeader({
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={handleLogout}>
                 <LogOut />
-                Keluar
+                Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

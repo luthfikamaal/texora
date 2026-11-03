@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { Navigate, useLocation } from "react-router-dom"
+import { Suspense, useEffect, useState } from "react"
+import { Navigate, Outlet, useLocation, useOutletContext } from "react-router-dom"
 
 import { authApi } from "@/lib/auth-api"
 import type { User } from "@/lib/auth-types"
@@ -11,23 +11,39 @@ type GuardState =
   | { status: "ok"; user: User }
   | { status: "unauth" }
 
+function SubPageFallback() {
+  return (
+    <div className="text-muted-foreground flex min-h-[60vh] items-center justify-center gap-2 text-sm">
+      <Spinner />
+      <span>Loading…</span>
+    </div>
+  )
+}
+
 /**
- * Guard route terproteksi: pastikan token valid lalu sediakan profil user
- * lewat render prop `children(user)`.
+ * Protected route guard: verifies valid access token and provides user profile
+ * via render prop `children(user)` or React Router `Outlet` context.
  */
 export function RequireAuth({
   children,
 }: {
-  children: (user: User) => React.ReactNode
+  children?: (user: User) => React.ReactNode
 }) {
   const location = useLocation()
-  const [state, setState] = useState<GuardState>({ status: "loading" })
+  const [state, setState] = useState<GuardState>(() => {
+    const session = loadSession()
+    if (session && Date.now() < session.expiresAt) {
+      return { status: "ok", user: session.user }
+    }
+    return { status: "loading" }
+  })
 
   useEffect(() => {
     let cancelled = false
 
     async function check() {
-      if (!loadSession()) {
+      const session = loadSession()
+      if (!session) {
         if (!cancelled) setState({ status: "unauth" })
         return
       }
@@ -62,7 +78,7 @@ export function RequireAuth({
     return (
       <div className="text-muted-foreground flex min-h-svh items-center justify-center gap-2 text-sm">
         <Spinner />
-        Memuat…
+        Loading…
       </div>
     )
   }
@@ -71,5 +87,17 @@ export function RequireAuth({
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
   }
 
-  return <>{children(state.user)}</>
+  if (children) {
+    return <>{children(state.user)}</>
+  }
+
+  return (
+    <Suspense fallback={<SubPageFallback />}>
+      <Outlet context={state.user} />
+    </Suspense>
+  )
+}
+
+export function useAuthUser(): User {
+  return useOutletContext<User>()
 }

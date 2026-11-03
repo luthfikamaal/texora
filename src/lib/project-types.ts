@@ -36,12 +36,24 @@ export type ProjectResponse = {
 }
 
 /** Template bawaan server (GET /api/v1/templates). */
+export type TemplatePreview = {
+  image_url?: string
+  pdf_url?: string
+}
+
 export type TemplateSummary = {
   id: string
   name: string
   description: string
   main_file: string
   size_bytes: number
+  pdf_url?: string
+  preview_url?: string
+  preview_image_url?: string
+  preview_pdf_url?: string
+  static_pdf_url?: string
+  static_image_url?: string
+  preview?: TemplatePreview
 }
 
 /** Template + isi file untuk pratinjau sebelum dipilih. */

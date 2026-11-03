@@ -14,7 +14,7 @@ import { getValidAccessToken } from "./session"
 async function requireToken(): Promise<string> {
   const token = await getValidAccessToken()
   if (!token) {
-    throw new ApiError(401, "unauthorized", "Sesi berakhir, silakan masuk lagi")
+    throw new ApiError(401, "unauthorized", "Session expired. Please sign in again.")
   }
   return token
 }

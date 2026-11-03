@@ -16,13 +16,13 @@ type LocationState = {
 function messageFor(err: ApiError) {
   switch (err.status) {
     case 401:
-      return "Token Google tidak valid. Coba masuk lagi."
+      return "Invalid Google credentials. Please try signing in again."
     case 403:
-      return "Akun tidak aktif. Hubungi administrator."
+      return "Your account has been deactivated. Please contact support."
     case 422:
-      return "Email Google kamu belum terverifikasi."
+      return "Your Google email address is unverified."
     case 503:
-      return "Login Google belum dikonfigurasi di server."
+      return "Google Sign-In is temporarily unavailable on the server."
     default:
       return err.message
   }
@@ -46,7 +46,7 @@ export function LoginPage() {
       setFormError(
         err instanceof ApiError
           ? messageFor(err)
-          : "Tidak dapat terhubung ke server. Coba lagi.",
+          : "Unable to reach the server. Please check your connection and try again.",
       )
     } finally {
       setSubmitting(false)
@@ -55,30 +55,29 @@ export function LoginPage() {
 
   return (
     <AuthLayout
-      title="Masuk"
-      description="Masuk ke Texora dengan akun Google kamu"
+      title="Welcome to Texora"
+      description="Sign in with your Google account to access your LaTeX workspace"
       footer={
-        <p className="text-muted-foreground text-center text-xs">
-          Akun Texora dibuat otomatis saat kamu pertama kali masuk.
+        <p className="text-muted-foreground text-center text-xs leading-relaxed">
+          By signing in, you agree to our Terms of Service and Privacy Policy.
         </p>
       }
     >
-      {formError && (
-        <Alert variant="destructive">
-          <CircleAlert />
-          <AlertDescription>{formError}</AlertDescription>
-        </Alert>
-      )}
+      <div className="flex flex-col gap-4">
+        {formError && (
+          <Alert variant="destructive">
+            <CircleAlert className="size-4" />
+            <AlertDescription>{formError}</AlertDescription>
+          </Alert>
+        )}
 
-      <GoogleSignIn
-        onCredential={handleCredential}
-        pending={submitting}
-        className="w-full"
-      />
-
-      <p className="text-muted-foreground text-center text-xs">
-        Gunakan akun Google yang emailnya sudah terverifikasi.
-      </p>
+        <div className="flex justify-center">
+          <GoogleSignIn
+            onCredential={handleCredential}
+            pending={submitting}
+          />
+        </div>
+      </div>
     </AuthLayout>
   )
 }

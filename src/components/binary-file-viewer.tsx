@@ -15,8 +15,7 @@ import { projectApi } from "@/lib/project-api"
 import { isImagePath } from "@/lib/project-types"
 
 /**
- * Penampil berkas biner (gambar/PDF) dari `GET /raw/{path}`.
- * Endpoint butuh header Authorization, jadi diambil sebagai blob URL.
+ * Binary asset viewer (images, PDFs) fetched via `GET /raw/{path}`.
  */
 export function BinaryFileViewer({
   projectId,
@@ -53,7 +52,7 @@ export function BinaryFileViewer({
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Gagal memuat berkas")
+          setError(err instanceof Error ? err.message : "Failed to load file")
         }
       })
       .finally(() => {
@@ -70,7 +69,7 @@ export function BinaryFileViewer({
     return (
       <div className="text-muted-foreground flex h-full items-center justify-center gap-2 text-sm">
         <Spinner />
-        Memuat berkas…
+        Loading file…
       </div>
     )
   }
@@ -82,7 +81,7 @@ export function BinaryFileViewer({
           <EmptyMedia variant="icon">
             <FileQuestion />
           </EmptyMedia>
-          <EmptyTitle>Berkas tidak dapat ditampilkan</EmptyTitle>
+          <EmptyTitle>Unable to display file</EmptyTitle>
           <EmptyDescription>{error ?? path}</EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -100,7 +99,7 @@ export function BinaryFileViewer({
             onClick={() => onDownload(path)}
           >
             <Download />
-            Unduh
+            Download
           </Button>
         </div>
         <div className="bg-muted/20 flex min-h-0 flex-1 items-center justify-center overflow-auto p-4">
@@ -121,7 +120,7 @@ export function BinaryFileViewer({
           <span className="text-muted-foreground truncate text-xs">{path}</span>
           <Button variant="ghost" size="sm" onClick={() => onDownload(path)}>
             <Download />
-            Unduh
+            Download
           </Button>
         </div>
         <iframe src={url} title={path} className="min-h-0 w-full flex-1" />
@@ -135,15 +134,15 @@ export function BinaryFileViewer({
         <EmptyMedia variant="icon">
           <FileQuestion />
         </EmptyMedia>
-        <EmptyTitle>Berkas biner</EmptyTitle>
+        <EmptyTitle>Binary file</EmptyTitle>
         <EmptyDescription>
-          Jenis berkas ini tidak bisa dipratinjau di editor.
+          This file type cannot be previewed directly in the editor.
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
         <Button variant="outline" onClick={() => onDownload(path)}>
           <Download />
-          Unduh berkas
+          Download file
         </Button>
       </EmptyContent>
     </Empty>

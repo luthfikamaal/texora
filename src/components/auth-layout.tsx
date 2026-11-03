@@ -31,7 +31,7 @@ export function AuthLayout({
               <div className="min-w-0">
                 <p className="text-sm leading-tight font-semibold">Texora</p>
                 <p className="text-muted-foreground text-[11px] leading-tight">
-                  Editor LaTeX
+                  LaTeX Workspace
                 </p>
               </div>
             </div>
