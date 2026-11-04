@@ -589,7 +589,7 @@ export function ProjectEditorPage({ user }: { user: User }) {
         open={agentOpen}
         onOpenChange={setAgentOpen}
         projectId={projectId}
-        projectName={project.name}
+        projectName={project?.name ?? ""}
         onApplied={reloadAfterAgent}
       />
 
@@ -597,7 +597,7 @@ export function ProjectEditorPage({ user }: { user: User }) {
         open={aiOpen}
         onOpenChange={setAiOpen}
         projectId={projectId}
-        projectName={project.name}
+        projectName={project?.name ?? ""}
         userName={user.display_name}
         fileCount={files.length}
         hasUnsavedChanges={dirty}
@@ -617,13 +617,15 @@ export function ProjectEditorPage({ user }: { user: User }) {
         }}
       />
 
-      <ProjectSettingsDialog
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-        project={project}
-        files={files}
-        onSaved={(p) => setProject(p)}
-      />
+      {project && (
+        <ProjectSettingsDialog
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          project={project}
+          files={files}
+          onSaved={(p) => setProject(p)}
+        />
+      )}
     </div>
   );
 }
